@@ -178,7 +178,10 @@ class Generator:
             b["payments"].append(pay)
         for i, key in enumerate(sorted(self.batches), start=1):
             b = self.batches[key]
-            b["settlement_id"] = "setl_%s_%04d" % (self.p.merchant_id[-6:], i)
+            # Full merchant id, not a 6-character tail. The tail was an artifact
+            # of ids that happened to end in a 6-char random suffix; on any other
+            # naming it slices mid-word and produces things like "setl_hant_1".
+            b["settlement_id"] = "setl_%s_%04d" % (self.p.merchant_id, i)
             b["split"] = split_for(b["settle_date"])
 
     def _by_settle_date(self, exclude_instant=True):
@@ -372,7 +375,7 @@ class Generator:
             netted = i in netted_idx
             rel_ts = _dt(rel, _hour(rng), rng.randrange(60), rng.randrange(60))
             e = {
-                "reserve_id": "rsrv_%s_%04d" % (p.merchant_id[-6:], i + 1),
+                "reserve_id": "rsrv_%s_%04d" % (p.merchant_id, i + 1),
                 "amount_paise": amt, "amount": fmt(amt),
                 "held_on": (rel - timedelta(days=90)).isoformat(),
                 "release_date": rel.isoformat(), "released_at_ist": iso(rel_ts),

@@ -373,7 +373,7 @@ Wall time is dominated by model latency, not by record count:
 
 Reconciliation scales with records (~70,000/sec). Investigation is roughly flat,
 because it is capped by the call budget rather than by batch size. The offline
-benchmark with the planner off measures **6,722 records/sec end to end**.
+benchmark with the planner off measures **2,845 records/sec end to end**.
 
 Investigation is sequential by design. Parallelising it was measured and
 rejected: Ollama serving a single 3.8B model returned only **1.29×** on four

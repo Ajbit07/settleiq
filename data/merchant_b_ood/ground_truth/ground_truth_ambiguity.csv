@@ -1,4 +1,4 @@
 payment_id_a,payment_id_b,settlement_id_a,settlement_id_b,amount,method,capture_date_ist,reason
-pay_00000000001801,pay_00000000001802,setl_B3LTZP_0032,setl_B3LTZP_0033,28783.75,netbanking,2025-11-22,identical amount+method+timestamp split across consecutive cycles; swap-invariant in gross and in fee
-pay_00000000001803,pay_00000000001804,setl_B3LTZP_0012,setl_B3LTZP_0013,2642.51,card,2025-11-08,identical amount+method+timestamp split across consecutive cycles; swap-invariant in gross and in fee
-pay_00000000001805,pay_00000000001806,setl_B3LTZP_0020,setl_B3LTZP_0021,171251.58,card,2025-11-14,identical amount+method+timestamp split across consecutive cycles; swap-invariant in gross and in fee
+pay_00000000001801,pay_00000000001802,setl_merchant_2_0032,setl_merchant_2_0033,28783.75,netbanking,2025-11-22,identical amount+method+timestamp split across consecutive cycles; swap-invariant in gross and in fee
+pay_00000000001803,pay_00000000001804,setl_merchant_2_0012,setl_merchant_2_0013,2642.51,card,2025-11-08,identical amount+method+timestamp split across consecutive cycles; swap-invariant in gross and in fee
+pay_00000000001805,pay_00000000001806,setl_merchant_2_0020,setl_merchant_2_0021,171251.58,card,2025-11-14,identical amount+method+timestamp split across consecutive cycles; swap-invariant in gross and in fee

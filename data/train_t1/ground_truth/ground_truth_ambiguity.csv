@@ -1,7 +1,7 @@
 payment_id_a,payment_id_b,settlement_id_a,settlement_id_b,amount,method,capture_date_ist,reason
-pay_00000000004201,pay_00000000004202,setl_T1RNGA_0044,setl_T1RNGA_0045,863.03,upi,2025-11-17,identical amount+method+timestamp split across consecutive cycles; swap-invariant in gross and in fee
-pay_00000000004203,pay_00000000004204,setl_T1RNGA_0023,setl_T1RNGA_0024,879.15,upi,2025-11-09,identical amount+method+timestamp split across consecutive cycles; swap-invariant in gross and in fee
-pay_00000000004205,pay_00000000004206,setl_T1RNGA_0071,setl_T1RNGA_0072,522.12,card,2025-11-27,identical amount+method+timestamp split across consecutive cycles; swap-invariant in gross and in fee
-pay_00000000004207,pay_00000000004208,setl_T1RNGA_0047,setl_T1RNGA_0048,375.90,upi,2025-11-18,identical amount+method+timestamp split across consecutive cycles; swap-invariant in gross and in fee
-pay_00000000004209,pay_00000000004210,setl_T1RNGA_0077,setl_T1RNGA_0078,13679.96,upi,2025-11-29,identical amount+method+timestamp split across consecutive cycles; swap-invariant in gross and in fee
-pay_00000000004211,pay_00000000004212,setl_T1RNGA_0050,setl_T1RNGA_0051,512.24,wallet,2025-11-19,identical amount+method+timestamp split across consecutive cycles; swap-invariant in gross and in fee
+pay_00000000004201,pay_00000000004202,setl_mrch_T1RNGA_0044,setl_mrch_T1RNGA_0045,863.03,upi,2025-11-17,identical amount+method+timestamp split across consecutive cycles; swap-invariant in gross and in fee
+pay_00000000004203,pay_00000000004204,setl_mrch_T1RNGA_0023,setl_mrch_T1RNGA_0024,879.15,upi,2025-11-09,identical amount+method+timestamp split across consecutive cycles; swap-invariant in gross and in fee
+pay_00000000004205,pay_00000000004206,setl_mrch_T1RNGA_0071,setl_mrch_T1RNGA_0072,522.12,card,2025-11-27,identical amount+method+timestamp split across consecutive cycles; swap-invariant in gross and in fee
+pay_00000000004207,pay_00000000004208,setl_mrch_T1RNGA_0047,setl_mrch_T1RNGA_0048,375.90,upi,2025-11-18,identical amount+method+timestamp split across consecutive cycles; swap-invariant in gross and in fee
+pay_00000000004209,pay_00000000004210,setl_mrch_T1RNGA_0077,setl_mrch_T1RNGA_0078,13679.96,upi,2025-11-29,identical amount+method+timestamp split across consecutive cycles; swap-invariant in gross and in fee
+pay_00000000004211,pay_00000000004212,setl_mrch_T1RNGA_0050,setl_mrch_T1RNGA_0051,512.24,wallet,2025-11-19,identical amount+method+timestamp split across consecutive cycles; swap-invariant in gross and in fee

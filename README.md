@@ -56,7 +56,7 @@ Thresholds tuned on `dev`; `test` scored once at the end.
 | of which the agent could name | ₹3,194.45 (fee variance) |
 | of which is refused adjustment attribution | ₹19,024.78 (18 adjustments, 7.2%) |
 | of which genuinely unexplainable | ₹2,271.47 (1 batch, by construction) |
-| throughput | **6,722 records/sec**, 777 ms wall (planner off) |
+| throughput | **2,845 records/sec**, 1,836 ms wall (planner off) |
 | cost of error | **₹5,760** triage vs **₹72,000** of unwinds avoided by refusing |
 
 Out-of-distribution `merchant_2` (different method mix, B2B ticket sizes,

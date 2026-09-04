@@ -65,7 +65,7 @@ Then read the **Residue %** column of the ablation:
 > repair takes it to 75. **The ML pair scorer closes the last 11 and drops
 > residue to 7.30%.** Netting proves batch membership and takes it to **0.09%**.
 > Amount-weighted F1 100, false-match rate **0.000%** against a 0.5% budget,
-> **6,722 records a second**."
+> **2,845 records a second**."
 
 If asked about the ML specifically: *amount alone reaches 83.33% top-1, the full
 feature set 100% — it changes 4 decisions, all 4 to the correct settlement.*

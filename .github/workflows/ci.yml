@@ -31,6 +31,17 @@ jobs:
           python verify_data.py data/merchant_a data/merchant_b_ood
       - name: Assert byte-identical regeneration
         run: |
+          # Hash a directory this step generated itself, not the checkout. data/
+          # is committed so a clone runs without a build step, and it also holds
+          # adversarial/ and hard_netting/, which come from separate make targets
+          # and are not reproduced by `python -m datagen`. Hashing the checkout
+          # therefore compared five profiles against seven and failed on a
+          # difference that says nothing about determinism.
+          rm -rf data
+          python -m datagen --out data
+          python -m datagen --profile train_t1 --out data
+          python -m datagen --profile train_t2 --out data
+          python -m datagen --profile train_t3 --out data
           find data -name '*.csv' | sort | xargs sha256sum | sha256sum > /tmp/h1
           rm -rf data
           python -m datagen --out data

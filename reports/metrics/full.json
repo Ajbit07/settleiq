@@ -3,7 +3,7 @@
   "summary": {
     "preset": "full",
     "model_version": "settleiq-pairscorer-1.0.0",
-    "wall_ms": 777,
+    "wall_ms": 1836,
     "payments": 5012,
     "settlements": 86,
     "bank_rows": 211,
@@ -20,17 +20,17 @@
     "escalated": 68,
     "suppressed_duplicate": 0,
     "audit_rows": 78,
-    "audit_head": "b6a8ea0001aa5f973d8add8fa5c2eff81b9e5170bccc5e304607ee47ab19c737",
+    "audit_head": "199dc79ac0b7cbda84339ec615f3d7c3584ca4ef4a0b17bf3b2d07772e4094bf",
     "h1_dates": 25,
     "h2_batches": 0,
     "failed_dates": 0,
     "unassigned_payments": 0,
     "timings": {
-      "stage0_normalise": 22,
-      "stage1_4_match": 54,
-      "stage5_netting": 61,
-      "stage6_decompose": 49,
-      "stage6b_agent_policy": 385
+      "stage0_normalise": 54,
+      "stage1_4_match": 119,
+      "stage5_netting": 123,
+      "stage6_decompose": 85,
+      "stage6b_agent_policy": 953
     }
   },
   "overall": {
