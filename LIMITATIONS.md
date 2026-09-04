@@ -106,7 +106,7 @@ because we chose which cases exist.
   are now never `withinTolerance`, always flagged, and raise a
   `partition_unproven` exception carrying the solver's own reason.
 
-- **Subset-sum DP is unexercised by the headline data.** On merchant A the ordered-block
+- **Subset-sum DP is unexercised by the headline data.** On `merchant_1` the ordered-block
   hypothesis resolves all 25 date-groups, so the DP fallback never runs on the
   headline dataset. It is called directly by unit tests instead
   (`NettingDpTest`), which cover exactness, no-reuse of a payment, refusal when
@@ -138,7 +138,7 @@ because we chose which cases exist.
   raised as an `attribution_ambiguous` exception naming the adjustment, its
   value, the candidate batches and the reason.
 
-  The cost is real and is reported rather than absorbed: on merchant A this
+  The cost is real and is reported rather than absorbed: on `merchant_1` this
   refuses **18 of 250 netted adjustments (7.2%, ₹19,024.78)** and pushes
   unexplained residue from ₹5,465.94 to ₹23,962.37. Those adjustments were
   previously netted into a batch on the strength of an invented boundary. What
@@ -228,7 +228,7 @@ One bug worth recording because of how it presented:
 
 **Multi-tenant id collision produced a confident, catastrophic number.** The
 generator emits the same `pay_...` identifiers for every merchant, and V1 made
-them a global primary key. Seeding merchant B after merchant A therefore hit
+them a global primary key. Seeding `merchant_2` after `merchant_1` therefore hit
 `ON CONFLICT DO NOTHING` on every payment and bank row and dropped them all.
 Ingest logged success. Settlements loaded, because settlement ids already
 carried a merchant token. Merchant B then reconciled **zero** payments against

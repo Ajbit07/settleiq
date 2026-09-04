@@ -1,188 +1,158 @@
-# DEMO_SCRIPT.md
+# Demo script — 5 minutes
 
-Five minutes. Two terminals, one browser tab. Every number on screen is
-computed at run time — nothing in the demo is hard-coded, including the closing
-headline.
+Written against **Track 04, AI Finance Controller**, whose bar is:
 
-**Before you start**
+> Closes one finance-ops loop across a 50+ record batch, reporting its match rate
+> and the exceptions it could not resolve.
+> **Throughput plus measured accuracy plus an honest exception list. One
+> cherry-picked match proves nothing.**
+
+So this script leads with numbers, not with the investigation UI. The first
+sixty seconds answer the bar completely; everything after that is evidence.
+
+## Before recording
 
 ```bash
-make all        # ~40s from an empty checkout: generate, build, train, evaluate
+docker compose up -d
+ollama pull phi4-mini:latest      # optional, but it is the differentiator
 ```
 
-Leave `make serve` running in a second terminal on port 8733.
+Set `SETTLEIQ_LLM_MAX_CALLS=12` in `.env` if you might click **Reconcile** on
+camera — it takes the run from ~128s to ~20s. Verdicts are identical either way.
+
+Use **merchant_1** (4,781 payments). Do not lead with merchant_3 — 17 payments
+is under the track's 50-record floor.
+
+Nothing else should be talking to Ollama while you record. It serialises a single
+model, and a competing process makes every call about 8× slower.
 
 ---
 
-## 0:00 — 0:40 · The problem, in their language
+## 0:00 – 0:45 · The loop and the numbers
 
-Terminal 1:
+**Overview, merchant_1.** Read the metric rail aloud.
 
-```bash
-make demo
-```
+> "Reconciliation across three sources that don't agree: a payment gateway, a
+> settlement report, and a bank statement. **4,781 payments reconciled in 69
+> milliseconds. 100% of bank credits matched, 86 of 86. 99.59% of settled value
+> accounted for. And ₹7,139 across 8 cases it could not resolve.** That last
+> number is the one we care most about, because it's the one most systems hide."
 
-Read the opening block aloud while section 1 counts up. Then stop on this line
-and let it sit:
+## 0:45 – 1:25 · The honest exception list
 
-```
-  captured GMV                            62,31,853.54
-  total credited by the bank              59,91,325.50
-  unexplained gap                          2,40,528.04   <- the whole problem
-```
+**Exceptions.** Point at *Named and evidenced* against *No source document exists*.
 
-> "This merchant sold ₹62.3 lakh and the bank paid them ₹59.9 lakh. Nobody in
-> their finance team can tell you where the other ₹2.4 lakh went."
+> "60 exceptions. **52 have a named cause and the source row that proves it.**
+> 8 don't — no refund, no chargeback, no reserve movement, nothing in the rate
+> card explains them. So we label them `unexplained` and escalate. We don't
+> attach the nearest plausible document and call it closed."
 
-Point at the three sample narrations underneath. They are deliberately ugly:
+Scroll the queue so it is visibly a batch, not one case.
 
-```
-UPI/249700040264/PAYOUT/RAZORPAY SOFTWARE PVT LTD
-NEFT-HDFCN42025110495048853-RAZORPAY SOFT PVT L-HDFC
-RTGS  CR HDFCR420251104341570 RAZORPAY SOFTWARE PRIV
-```
+## 1:25 – 2:25 · Not cherry-picked
 
-> "That's what the bank actually wrote. Half of them have a truncated or
-> mangled reference number."
+**Metrics.** This scene exists to answer *"one cherry-picked match proves nothing."*
 
-## 0:40 — 1:40 · The residue falls
+Point at the disclaimer first — it is unprompted and most entries won't have one:
 
-Section 2 runs the engine and animates the counters. The line to wait for:
+> "These are offline results against held-out ground truth the running service
+> cannot read."
 
-```
-  residue falling            2,40,528.04 -> 60,132.01 -> 10,931.88 -> 5,465.94
-  residue after decomposition                          5,465.94
-```
+Then read the **Residue %** column of the ablation:
 
-> "₹2.4 lakh of 'missing' money, down to ₹5,466. Not by guessing — every batch
-> was decomposed into gross, fee, GST on the fee, TDS, netted refunds,
-> chargebacks, dispute fees, rolling reserve held, reserve released."
+> "Every row is a real run with a stage switched off. Exact reference matching
+> alone gets 72 of 86 credits and leaves **19.75%** of value unexplained. UTR
+> repair takes it to 75. **The ML pair scorer closes the last 11 and drops
+> residue to 7.30%.** Netting proves batch membership and takes it to **0.09%**.
+> Amount-weighted F1 100, false-match rate **0.000%** against a 0.5% budget,
+> **6,722 records a second**."
 
-Call out `batches exact to the paise: 39`.
+If asked about the ML specifically: *amount alone reaches 83.33% top-1, the full
+feature set 100% — it changes 4 decisions, all 4 to the correct settlement.*
 
-## 1:40 — 2:40 · What the agent did with the rest
+## 2:25 – 3:35 · The loop closing on one case
 
-Section 3. Three lines matter:
+**Exceptions → open the largest fee variance.** Walk the money trail down, then
+click **Expected Net**:
 
 ```
-  ambiguous_candidates        33        1,574.83
-  fee_variance                24        1,619.62
-  unexplained                  1        2,271.47
-
-  auto-posted    14
-  escalated      44
+100,000.00  payments captured
+ −2,000.00  platform fee (2% published card rate)
+   −360.00  GST on fee
+ −1,000.00  TDS under 194-O
+ −4,882.00  rolling reserve
+─────────────
+ 91,758.00  expected net    vs   91,508.00 paid    →  −250.00
 ```
 
-> "The agent named ₹3,194 of the residue as a fee variance — the platform
-> quietly changed the card rate mid-month and the published rate card doesn't
-> show it. It refused to name the last ₹2,271. There is genuinely no source
-> document for it, so it says so instead of writing it off."
+> "Integer paise end to end — no floating point anywhere near the money. The
+> platform charged an effective 2.25% against a published 2.00%."
 
-Then the refusal line:
+## 3:35 – 4:20 · Where the AI stops
 
-> "It also refused to auto-match 33 batches. Two payments with the same amount,
-> same method, same rate tier, in different batches settling the same day —
-> swapping them changes no total. Arithmetic cannot separate them. Refusing is
-> the correct answer."
+**Control Trace**, same case. This is the differentiator.
 
-## 2:40 — 3:10 · Run it twice
+> "Six lookups, each chosen by phi4-mini, each with the model's own reason."
 
-Section 4, on screen already:
+Then point at the bare `TOOL` row:
 
-```
-  first run appended              58 hash-chained rows
-  identical re-run appended        0 rows   <- zero duplicate postings
-  audit: chain_valid=true
-```
+> "And `check_rate_card` — which the model never asked for. The engine runs it
+> regardless. **We tested letting the model plan alone: it spent all six steps
+> going broad, never checked the rate card, and three fee variances we had
+> already explained collapsed back to 'unexplained'.** More evidence gathered,
+> less known. So the model picks the order; the engine guarantees the questions."
 
-> "Reconciliation jobs get retried. Retrying this one posts nothing, because
-> every posting is keyed by a hash of the facts it was computed from."
+Land on `POLICY: automatic posting blocked`.
 
-Optional, if someone challenges it — Terminal 1:
+> "The model never reaches this line. It cannot compute an amount and it cannot
+> write to the ledger."
 
-```bash
-python - <<'EOF'
-import io
-p='reports/demo_audit.jsonl'
-L=io.open(p,encoding='utf-8').read().split('\n')
-L[4]=L[4].replace('"residue":"','"residue":"9')
-io.open(p,'w',encoding='utf-8').write('\n'.join(L))
-EOF
-```
+## 4:20 – 5:00 · Close
 
-Then re-run and show `chain_valid=false`.
+**Audit.** CHAIN VERIFIED, then press **Verify**.
 
-## 3:10 — 4:20 · The UI
+> "SHA-256 over previous-hash plus the canonical row, so editing a payload or a
+> verdict is caught — not just cutting a link. The database refuses UPDATE and
+> DELETE outright. And re-run the same batch: **78 duplicate postings suppressed,
+> zero rows appended.** Postings are keyed by a hash of the facts they were
+> computed from."
 
-Browser → `http://localhost:8733`
+---
 
-**Bank credits (0:20).** Click any row with a red residue. The waterfall
-animates: gross at the top, then every deduction cascading down to the bank
-credit, residue in red at the bottom.
+## Do not
 
-> "This is the screen the merchant wanted. To the paise."
+- **Don't run Reconcile live** at the default budget — 128 seconds of dead air.
+- **Don't lead with the money trail.** It is scene four. The bar is throughput
+  and accuracy.
+- **Don't quote wall-clock as reconciliation time.** 4,781 payments reconcile in
+  **69 ms**; the rest of the wall clock is the model investigating, serialised,
+  under a budget you chose.
+- **Don't skip the could-not-resolve number.** It is named in the brief, and
+  volunteering your own failure count is the most credible thing in the video.
 
-**Exceptions (0:25).** Expand one `fee_variance` item.
+## If you have 30 seconds spare
 
-> "Four bounded nodes: classify, gather evidence, propose resolution, policy
-> check. Hard cap of six steps, no loops."
+Upload `demo/upload/8_PAYMENTS_with_errors.csv` on **Ingest** as PAYMENTS:
+**2 accepted, 5 refused**, each with a reason code and its original text. Shows
+the loop begins with validation rather than with trusting the feed.
 
-Point at the evidence list — every line ends in a bracketed source id.
+## The question they will ask
 
-> "The agent may not state a fact without a row-level provenance id. And it
-> never computes an amount. It picks a label and fills slots; the backend does
-> the arithmetic."
+> **"What breaks at 2am?"**
 
-Now expand an **escalated** item and read the failed policy arms.
-
-> "Six arms. All must pass to auto-post. This one failed on confidence, so a
-> human gets it — with the reason written down."
-
-**Metrics (0:25).** The ablation table.
-
-> "Each row is a real run with that stage switched off. UTR repair bought three
-> bank links. The scorer bought eleven. The netting solver is what turns bank
-> matching into payment-level reconciliation — 4,781 links and residue down two
-> orders of magnitude."
-
-Then point at the caveat under the table:
-
-> "Global assignment bought nothing measurable here, and we say so rather than
-> hiding it. Each credit has one viable partner, so greedy and Hungarian agree."
-
-Click **RE-VERIFY CHAIN**.
-
-## 4:20 — 5:00 · Close
-
-Back to Terminal 1:
-
-```
-  62.32L reconciled | 2,271.47 genuinely unexplained | 58 honest exceptions
-  engine 1699 ms | 5,223 records | residue 5,465.94 (0.0877% of GMV)
-```
-
-> "₹62.3 lakh reconciled. ₹5,466 of residue, of which ₹3,194 is named and
-> evidenced and ₹2,271 is genuinely unexplainable — one batch, and we report it
-> rather than absorbing it. Fifty-eight exceptions, fourteen auto-posted,
-> forty-four escalated with reasons. One and a half seconds."
+> "The most dangerous failure wasn't a crash — it was the model quietly making
+> things worse. When we let it plan more cases, three fee variances we had
+> already explained collapsed to 'unexplained'. Nothing errored. The number just
+> got worse, silently. We fixed it by making the decisive checks non-skippable.
 >
-> "And the number I'd actually defend: zero false matches among auto-postable
-> links, and zero ambiguous payments missed. That's the error that costs an
-> analyst a week."
-
-Finish on LIMITATIONS.md:
-
-> "This is our own synthetic data. It proves the algorithm and the calibration.
-> It does not prove real-world accuracy, and we've written down exactly which
-> is which."
-
----
-
-## If something goes wrong
-
-| symptom | fix |
-|---|---|
-| exceptions all show `DUPLICATE SUPPRESSED` | the ledger is from a previous run — `rm reports/audit_ledger.jsonl` (this is correct behaviour, wrong view) |
-| `make serve` port busy | `--serve 8734`, or kill the earlier `java` |
-| demo counters print on one line | you are piping stdout; run it attached to a terminal |
-| model not loaded | `make train` (engine falls back to a transparent prior, and says so) |
+> If the model is down: the deterministic planner takes over, the trace records
+> `llm_used=false`, and because of that fix the classification is identical. The
+> AI dying at 2am changes nothing about the money.
+>
+> If the job runs twice: postings are keyed by a hash of the facts, so a retry
+> appends zero rows. Two workers can't claim the same job, and a dead worker's
+> job is requeued — both tested.
+>
+> What we don't have: alerting, a retry queue, and it's single-node. If the
+> service is down at 2am nobody gets paged. That's next. The guarantee we do
+> have is that nothing wrong gets *written* while we're not looking."

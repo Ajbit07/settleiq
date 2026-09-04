@@ -41,7 +41,7 @@ paise. There is no `float` or `double` anywhere in the money path.
 
 ## Measured results
 
-Merchant A, one month, 5,012 payments, 86 settlement batches, 211 bank rows.
+`merchant_1`, one month, 5,012 payments, 86 settlement batches, 211 bank rows.
 Thresholds tuned on `dev`; `test` scored once at the end.
 
 | metric | value |
@@ -56,16 +56,17 @@ Thresholds tuned on `dev`; `test` scored once at the end.
 | of which the agent could name | ₹3,194.45 (fee variance) |
 | of which is refused adjustment attribution | ₹19,024.78 (18 adjustments, 7.2%) |
 | of which genuinely unexplainable | ₹2,271.47 (1 batch, by construction) |
-| throughput | ~4,100 records/sec, 1.3 s wall |
+| throughput | **6,722 records/sec**, 777 ms wall (planner off) |
 | cost of error | **₹5,760** triage vs **₹72,000** of unwinds avoided by refusing |
 
-Out-of-distribution merchant B (different method mix, B2B ticket sizes, ₹8.06 cr
-GMV): 100.00 F1 both ways, 0.000% false matches, 100% exception precision.
+Out-of-distribution `merchant_2` (different method mix, B2B ticket sizes,
+₹8.06 cr GMV): 100.00 F1 both ways, 0.000% false matches, 100% exception
+precision.
 
 **The two data paths agree to the paise.** The CLI reads CSVs through the
 engine's own loader; the API reads the same data from Postgres through JDBC.
-Both produce identical results — merchant A: 4,781 links, 58 exceptions
-(10 auto-posted, 68 escalated), residue ₹23,962.37; merchant B: 1,669 links,
+Both produce identical results — `merchant_1`: 4,781 links, 78 exceptions
+(10 auto-posted, 68 escalated), residue ₹23,962.37; `merchant_2`: 1,669 links,
 residue ₹1,12,002.29. Nothing about the storage layer moves a number, which is
 the whole reason the engine has no dependencies.
 
@@ -84,8 +85,8 @@ paths is checked by eye rather than only by assertion.
 | + UTR repair | 75/86 | 0 | 0 | 0.00 | 0.000 | 9,87,787.96 | 15.851 | 698 |
 | + pair scorer | 86/86 | 0 | 0 | 0.00 | 0.000 | 4,54,838.28 | 7.299 | 750 |
 | + global assignment | 86/86 | 0 | 0 | 0.00 | 0.000 | 4,54,838.28 | 7.299 | 765 |
-| + netting solver | 86/86 | 0 | 4,781 | 100.00 | 0.000 | 5,465.94 | 0.088 | 990 |
-| + exception agent | 86/86 | 0 | 4,781 | 100.00 | 0.000 | 5,465.94 | 0.088 | 1365 |
+| + netting solver | 86/86 | 0 | 4,781 | 100.00 | 0.000 | 23,962.37 | 0.385 | 404 |
+| + exception agent | 86/86 | 0 | 4,781 | 100.00 | 0.000 | 23,962.37 | 0.385 | 773 |
 
 **Global assignment does not earn its place on this dataset.** Greedy and
 Hungarian produce identical output, including under a stress configuration that
@@ -188,161 +189,149 @@ ablation, calibration, coverage-vs-risk.
 
 ## Quickstart
 
+Requires **Docker** (Desktop or Engine) and about **8 GB RAM**. Nothing else —
+Java, Maven and Python all run inside containers.
+
 ```bash
-cp .env.example .env    # change POSTGRES_PASSWORD; set API_PORT if 8080 is taken
-make up                 # postgres + migrate + seed + api + ml
-make smoke              # end-to-end assertions against the running stack
+cp .env.example .env     # set POSTGRES_PASSWORD; change API_PORT if 8088 is taken
+docker compose up -d     # postgres → migrate → seed → api + ml
 ```
 
-That is the whole thing: Compose starts Postgres, waits for it to be genuinely
-ready, runs Flyway migrations, seeds the generated data, then starts the API.
+Then open **http://localhost:8088** and pick a merchant.
+
+That is the whole thing. Compose starts Postgres, waits until it is genuinely
+ready, runs Flyway migrations, seeds the data in `data/`, and starts the API.
 No manual step, no ordering by `sleep`.
 
-Ports come from `.env` (`API_PORT`, `ML_PORT`), defaulting to 8080 and 8000.
-`make smoke` reads the same file, so changing a port does not break it.
+```bash
+bash ops/smoke.sh        # end-to-end assertions against the running stack
+```
 
-| surface | url |
+### The data is already in the repo
+
+`data/` ships committed, so a fresh clone runs immediately:
+
+| Merchant | Records | Purpose |
+|---|---|---|
+| **merchant_1** | 4,781 payments, 86 credits | throughput and accuracy |
+| **merchant_2** | 1,669 payments, 42 credits | second tenant, out-of-distribution |
+| **merchant_3** | 17 payments, 12 settlements | one example of every outcome |
+
+Reconcile a merchant from the UI (**Reconcile**), or:
+
+```bash
+curl -X POST http://localhost:8088/api/v1/runs   -H 'content-type: application/json'   -d '{"merchantId":"merchant_1","preset":"full"}'
+```
+
+### Building the data from scratch instead
+
+If you would rather regenerate everything rather than trust the committed CSVs:
+
+```bash
+make generate    # synthesise both merchants from datagen/, verify integrity
+make train       # fit the pair scorer, export mlservice/model.json
+make evaluate    # ablation, calibration, coverage-risk, held-out test
+make benchmark   # combined report, including the LLM proof
+```
+
+`make generate` writes `data/merchant_a/` and `data/merchant_b_ood/`, each with
+`observable/` (what the system may read) and `ground_truth/` (what it is scored
+against and can never see). `verify_data.py` re-reads the written CSVs — never
+the in-memory generator — so serialisation bugs are caught too.
+
+Windows without `make`: use `make.cmd`, or run the underlying commands in the
+`Makefile` directly.
+
+### The hand-built demo set
+
+`merchant_3` exists so every outcome can be pointed at individually — one
+example each of auto-posted, held over the ceiling, held off the allowlist, held
+as ambiguous, fee variance, netted refund, chargeback debit, reserve movement,
+duplicate credit, unproven partition, and unexplained.
+
+```bash
+bash demo/load.sh        # create, ingest 7 CSVs, reconcile, self-check
+bash demo/reset.sh       # empty it so you can ingest by hand in the UI
+```
+
+`demo/verify.py` fails loudly if the engine ever stops agreeing with the
+dataset, so its documentation cannot quietly go stale. See
+[demo/README.md](demo/README.md).
+
+### The investigation planner
+
+The agent works with or without a model. To enable it, install
+[Ollama](https://ollama.com) on the host and pull the model:
+
+```bash
+ollama pull phi4-mini:latest
+```
+
+Compose already points at `host.docker.internal:11434` with a `host-gateway`
+alias, so this works on Linux as well as Docker Desktop.
+
+Without it the deterministic planner runs, every verdict is identical, and the
+UI says `LLM UNREACHABLE` rather than pretending. Verified, not asserted: see
+§4 of [ARCHITECTURE.md](ARCHITECTURE.md).
+
+```bash
+SETTLEIQ_LLM_MAX_CALLS=12    # fewer model-planned cases, ~20s runs
+SETTLEIQ_LLM_MAX_CALLS=72    # default, ~128s runs
+```
+
+### Surfaces
+
+| Surface | URL |
 |---|---|
-| UI | `http://localhost:${API_PORT}/` |
-| API docs (OpenAPI) | `http://localhost:${API_PORT}/docs` |
-| readiness / liveness | `/actuator/health/readiness`, `/actuator/health/liveness` |
-| Prometheus metrics | `/actuator/prometheus` |
-| ML service | `http://localhost:${ML_PORT}/docs` |
+| UI | `http://localhost:8088/` |
+| API docs (OpenAPI) | `http://localhost:8088/docs` |
+| Readiness / liveness | `/actuator/health/readiness`, `/actuator/health/liveness` |
+| Prometheus | `/actuator/prometheus` |
+| ML service | `http://localhost:8010/docs` |
 
-Optional environment, both off by default so the demo needs no setup:
+### Optional hardening, off by default
 
 ```bash
-SETTLEIQ_API_KEYS='key:merchant,merchant|admin:*'   # enables auth + tenant scope
+SETTLEIQ_API_KEYS='key1:merchant_1|admin:*'   # auth + per-key tenant scope
 SETTLEIQ_RATE_LIMIT_PER_MIN=600
-SETTLEIQ_LLM_API_KEY=...                            # enables the LLM planner
-SETTLEIQ_LLM_MODEL=claude-sonnet-5
 ```
 
-With neither set the API runs open and deterministic, and says so on
-`/api/v1/auth/status` rather than looking protected.
+With auth on, the UI's posture lamp opens a panel to hold a key in the browser.
+With it off the API runs open and says so on `/api/v1/auth/status` rather than
+looking protected.
 
-The offline pipeline still works without any of it:
+### Tests
 
 ```bash
-make generate    # synthesise both merchants, verify integrity, print the census
-make train       # fit the pair scorer, export model.json
-make evaluate    # metrics, ablation, calibration, coverage-risk, held-out test
-make demo        # scripted run with a live counter
-make serve       # the same UI, on the engine alone, at http://localhost:8733
-make adversarial # ML feature ablation where amount carries no information
-make hard-netting # partition cases the ordered-block hypothesis cannot solve
-make test        # 34 unit tests (no docker, no database)
-make it          # 17 integration tests against real Postgres 16
+./mvnw clean verify      # 47 unit + 30 integration (Testcontainers)
+bash ops/smoke.sh        # end-to-end against the running stack
 ```
-
-See [OPERATIONS.md](OPERATIONS.md) for the API, configuration and the
-infrastructure decisions.
 
 ## Architecture
 
-Two Maven modules with exactly one dependency arrow, `api -> engine`:
+Full detail — pipeline stages, the agent's boundaries, the data model, the
+performance and accuracy numbers and how they were measured — is in
+**[ARCHITECTURE.md](ARCHITECTURE.md)**.
+
+The one-paragraph version:
 
 ```
-engine/        deterministic core        Java 21, ZERO runtime dependencies
-api/           transport + persistence   Spring Boot 3.3, JDBC, Flyway
+   messy feeds  →  LLM chooses WHAT TO LOOK AT   (read-only lookups, bounded)
+                →  ENGINE COMPUTES                (integer paise, from source rows)
+                →  POLICY DECIDES                 (six gates — the only write path)
+                →  LEDGER records  |  ESCALATE
 ```
 
-`settleiq-engine` compiles with plain `javac` and owns every rupee of
-arithmetic. The zero-dependency rule is enforced by `maven-enforcer-plugin` and
-re-checked in CI, so a Spring or driver upgrade cannot change a settlement
-figure. `settleiq-api` owns transport, persistence, scheduling and
-observability, and performs no arithmetic at all.
+A model may reorder a closed list of read-only lookups and its stated reason is
+kept verbatim. It cannot invent a tool, compute an amount, or write anything.
+The engine runs the decisive lookups regardless of what the planner chose, and
+only deterministic policy gates can append to the ledger.
 
-```
-datagen/       synthetic merchant-month + hidden ground truth   (Python, stdlib)
-engine/        the whole deterministic pipeline                 (Java 21, zero deps)
-  Money        long paise, BigDecimal rates, HALF_UP everywhere
-  Normalizer   Stage 0 - narration parsing, UTR repair, provenance spans
-  Matcher      Stages 1-4 - exact, repair-as-identity, candidates, scorer, Hungarian
-  Netting      Stage 5 - k-way exact partition, H1 ordered-block then H2 subset-sum DP
-  AgentTools   11 read-only investigation tools, every fact row-sourced
-  ExceptionAgent  state-driven tool loop, hard step cap 6
-  LlmAdapter   optional planner; picks from a closed list, never a number
-  Policy       6 deterministic arms; auto-post only if all pass
-  Audit        append-only SHA-256 hash chain, idempotency keys
-mlservice/     GBDT + isotonic calibration, exports model.json  (Python, stdlib)
-evaluator/     metrics, ablation, curves                        (Python, stdlib)
-api/           Spring Boot: REST, JDBC, Flyway, jobs, metrics
-ml/            FastAPI: narration parsing + scoring (advisory, not in the hot path)
-ops/           Dockerfiles
-db/            reference DDL for the standalone path
-api/src/main/resources/static/
-               five screens, no framework, no build step; served by both backends
-```
-
-### Infrastructure
-
-- **PostgreSQL 16** with **Flyway** migrations (`V1` schema, `V2` audit ledger,
-  `V3` jobs, `V4` a forward fix, `V5` tenant-scoped keys, `V6` ingestion runs,
-  `V7` audit content verification). The audit ledger is append-only *at the
-  database level*: `BEFORE UPDATE/DELETE/TRUNCATE` triggers raise.
-- **Idempotency is a UNIQUE constraint**, not a `SELECT`. The check-then-act
-  version passes a single-threaded test and double-posts under the exact
-  concurrency it exists to survive.
-- **No Redis, no Kafka.** Job claiming is `FOR UPDATE SKIP LOCKED` plus a
-  Postgres advisory lock. A broker would create a second source of truth about
-  whether a run happened, which is the ambiguity an audit trail removes.
-- **51 tests**: 34 unit (no infra) and 17 integration against **real Postgres 16**,
-  including six that tamper with a committed ledger, seven that construct
-  ambiguous attribution windows, and five that prove the partition solver
-  refuses rather than picking one of several valid answers.
-  No H2 fallback — the schema depends on advisory locks, statement triggers,
-  JSONB and `SKIP LOCKED`, and an in-memory substitute would pass tests that
-  production fails.
-
-### Design decisions worth arguing with
-
-**Stage 5 is a partition problem, not a lookup.** Settlement reports publish
-batch totals but never batch membership. The solver proposes that a cycle is a
-contiguous window over an ordering key, *verifies* that prefix sums hit every
-batch gross exactly, and falls back to a bounded subset-sum DP when that fails.
-It refuses rather than approximating. On merchant A the ordered-block hypothesis
-resolves all 25 date-groups and the DP is never needed.
-
-**A unique UTR repair is identity evidence, not a score.** The learned scorer
-leans on amount delta, because for almost every batch the credit equals the net.
-That makes the one batch with a genuine discrepancy the lowest-scoring one — so
-gating the link on the amount agreeing would leave exactly the batches you need
-to investigate unmatched. Identity establishes the link; the amount disagreement
-becomes the residue.
-
-**Refusing is a success state.** Two payments with the same amount, method and
-rate tier in different batches settling the same day are swap-invariant: no
-arithmetic separates them. The system produces an assignment, flags it, and
-refuses to auto-post. 48/48 such payments are caught, 0 missed.
-
-**The UI has a build step of zero and one accent colour.** Five screens, no
-framework, no bundler — one HTML file, one stylesheet, one module. It is a
-light-only surface: a cool paper ground rather than the warm cream light
-fintech UIs default to, ink at charcoal-navy rather than black, and a single
-restrained indigo carrying every interactive affordance. Emerald means
-reconciled, bronze means under investigation, coral means money at risk;
-nothing else is coloured. Glass is an accent on four elements — the command
-strip, the rail, the filter bars and the investigation header — and never on a
-table, because a translucent number is a number you distrust. Every text role
-clears 4.5:1 and every chart mark 3:1 on the surface it actually sits on,
-measured in the running page rather than eyeballed.
-
-The signature is the **evidence chain**: one credit traced top to bottom
-through the payments captured, the orders behind them, the credit the bank
-posted, the settlement decomposition line by line, the arithmetic check, the
-policy decision and the ledger row. Every node carries the id of the row that
-proves it, and where a link genuinely is not on record — no orders ingested,
-say — the node says so rather than being quietly dropped. The refusal state
-shows both tied payments side by side with the gap named, drawn from the run's
-own flagged set; it deliberately does not print a per-candidate confidence,
-because the engine does not score the alternatives separately and inventing one
-would manufacture the very distinction the system is refusing to make.
-
-**The engine is never told the fee schedule changed.** The generator moves the
-card rate mid-month; the published rate card the engine reads does not show it.
-The resulting ₹3,194.45 of drift has to surface as a `fee_variance` exception,
-which it does.
+Three modules: `engine/` (Java 21, **zero dependencies**, every money figure),
+`api/` (Spring Boot 3.3, ingestion and orchestration), `ml/` + `mlservice/`
+(FastAPI serving a calibrated GBDT pair scorer). PostgreSQL 16 with Flyway, and
+an append-only audit ledger whose verification recomputes row *contents*, not
+just links.
 
 ## Not built
 
@@ -352,7 +341,7 @@ Stated plainly so nobody discovers it in a demo:
   scoped to merchants, which is enough to stop cross-tenant access but is not
   an identity system. There is no key rotation and no per-endpoint scope.
 - **No OR-Tools CP-SAT fallback.** The bounded subset-sum DP refuses and
-  escalates instead. On merchant A the ordered-block hypothesis resolves all 25
+  escalates instead. On `merchant_1` the ordered-block hypothesis resolves all 25
   date-groups, so the DP fallback never runs on the headline dataset; it is
   covered by unit tests calling it directly rather than by the data.
 - **LangGraph** was substituted with a bounded state machine in Java (same node
