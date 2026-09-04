@@ -1,0 +1,50 @@
+[
+  {
+    "scenario": "unique",
+    "note": "H1 refuted, exactly one partition exists",
+    "settle_date": "2025-11-06",
+    "pool_size": 4,
+    "pool_total": 1000,
+    "batches": [
+      450,
+      550
+    ],
+    "expected": "H2 solves, unique"
+  },
+  {
+    "scenario": "ambiguous",
+    "note": "two different partitions both sum exactly",
+    "settle_date": "2025-11-13",
+    "pool_size": 4,
+    "pool_total": 1000,
+    "batches": [
+      500,
+      500
+    ],
+    "expected": "refuse: AMBIGUOUS_MULTIPLE_PARTITIONS"
+  },
+  {
+    "scenario": "partial",
+    "note": "only part of the captured pool has settled",
+    "settle_date": "2025-11-20",
+    "pool_size": 4,
+    "pool_total": 1000,
+    "batches": [
+      220,
+      380
+    ],
+    "expected": "partial: 400 captured but unsettled"
+  },
+  {
+    "scenario": "bound",
+    "note": "pool exceeds the verified 400-item DP bound",
+    "settle_date": "2025-11-28",
+    "pool_size": 401,
+    "pool_total": 2811,
+    "batches": [
+      1402,
+      1409
+    ],
+    "expected": "refuse: BOUND_ITEMS"
+  }
+]

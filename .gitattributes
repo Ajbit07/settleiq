@@ -1,0 +1,28 @@
+# Line endings are not cosmetic here.
+#
+# A shell script with CRLF fails on the shebang line -- bash reads the \r as
+# part of the interpreter path -- and every subsequent line reports
+# `$'\r': command not found`. A Makefile with CRLF breaks recipe parsing the
+# same way. Both happened after editing on Windows, and both present as a
+# corrupt-looking script rather than as a line-ending problem, which is why
+# these are pinned rather than left to core.autocrlf.
+
+* text=auto eol=lf
+
+*.sh        text eol=lf
+Makefile    text eol=lf
+mvnw        text eol=lf
+*.sql       text eol=lf
+*.py        text eol=lf
+*.java      text eol=lf
+*.yml       text eol=lf
+*.yaml      text eol=lf
+
+# Windows-only entry points genuinely want CRLF.
+*.cmd       text eol=crlf
+*.bat       text eol=crlf
+
+# Never touched.
+*.jar       binary
+*.png       binary
+*.jpg       binary

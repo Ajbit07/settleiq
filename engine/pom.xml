@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>com.settleiq</groupId>
+    <artifactId>settleiq-parent</artifactId>
+    <version>1.0.0</version>
+  </parent>
+
+  <artifactId>settleiq-engine</artifactId>
+  <name>SettleIQ Engine</name>
+  <description>
+    Deterministic reconciliation core. ZERO runtime dependencies, by rule.
+    Test-scoped dependencies are permitted; runtime ones are not. If this module
+    ever needs a runtime jar, that is a design smell worth arguing about first.
+  </description>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <!-- Enforce the zero-runtime-dependency rule mechanically. -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-enforcer-plugin</artifactId>
+        <version>3.5.0</version>
+        <executions>
+          <execution>
+            <id>no-runtime-deps</id>
+            <goals><goal>enforce</goal></goals>
+            <configuration>
+              <rules>
+                <banTransitiveDependencies>
+                  <excludes><exclude>*:*:*:*:test</exclude></excludes>
+                </banTransitiveDependencies>
+              </rules>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+</project>

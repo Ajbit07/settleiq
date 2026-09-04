@@ -1,0 +1,12 @@
+{
+  "amt_f1": 100.0,
+  "row_f1": 100.0,
+  "false_match": 0.0,
+  "exception_precision": 100.0,
+  "residue_paise": 2396237,
+  "residue_fmt": "23,962.37",
+  "residue_pct_gmv": 0.38451433183071887,
+  "rps": 6722,
+  "wall_ms": 777,
+  "ambiguous_missed": 0
+}

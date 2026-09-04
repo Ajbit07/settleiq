@@ -1,0 +1,2 @@
+refund_id,payment_id,amount,created_at_ist,netted_flag
+rfnd_d01,pay_d05,3000.00,2025-12-03T14:00:00+05:30,true

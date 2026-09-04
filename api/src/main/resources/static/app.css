@@ -1,0 +1,926 @@
+/* SettleIQ — reconciliation control surface. Light only.
+ *
+ * THE THESIS. This product's line is "don't automate the guess, automate the
+ * proof", so the design material is PROOF: chain of custody, provenance stamps,
+ * arithmetic that closes to the paise. Every decision below serves that, and
+ * the one place boldness is spent is the evidence chain.
+ *
+ * COLOUR. A cool paper base rather than the warm cream light fintech UIs default
+ * to — cream reads editorial, and this is an instrument. Ink is charcoal-navy,
+ * never pure black. One restrained indigo carries every interactive affordance;
+ * emerald means reconciled, bronze means under investigation, coral means money
+ * at risk. Nothing else is coloured.
+ *
+ * TYPE. The signature move is in the figures: rupees are set at full weight and
+ * paise are stepped down, so a column reads magnitude first and precision
+ * second — without ever dropping the precision, which is the whole product.
+ * Everything is tabular-lining so decimals stack.
+ *
+ * SURFACES are flat and bordered, not floated. An earlier pass used blur and
+ * elevation on the chrome; both were removed. A control surface earns its
+ * seriousness from alignment and hairlines, and a translucent panel over
+ * financial data is a panel you have to read twice. Depth is now carried by a
+ * single hairline and a 1px shift in ground, nothing more.
+ *
+ * SPACE is a 4px rhythm. Nothing sits off-grid.
+ */
+
+:root {
+  color-scheme: light;
+
+  /* ground and surfaces */
+  --paper:     #f6f7fa;
+  --surface:   #ffffff;
+  --raised:    #fbfbfd;
+  --sunken:    #eef0f5;
+  --wash:      #f0f3fd;   /* selected row: indigo at ~4% over paper */
+
+  /* ink */
+  --ink:       #10131a;
+  --ink-2:     #474d5c;
+  /* Measured against every bed it sits on, not just white: #6b7285 read
+     4.21:1 on --sunken, where lamp labels and hash lines live. */
+  --ink-3:     #616879;
+
+  /* line work */
+  --line:      #e4e7ef;
+  --line-2:    #cfd4e2;
+  --hair:      rgba(16,19,26,.06);
+
+  /* accents — one each, no palette drift */
+  --indigo:    #2f3eae;
+  --indigo-hi: #3b4bc4;
+  --indigo-2:  #5568d8;   /* chart marks: need 3:1, not 4.5:1 */
+  --emerald:   #0e7c66;
+  --bronze:    #8a6014;   /* 4.89:1 on --sunken; #9a6b18 read 4.10 */
+  --coral:     #c0392f;
+  --slate:     #2a6f8e;   /* provenance references */
+  --on-accent: #ffffff;
+
+  /* Elevation is reserved for things that genuinely float above the page: a
+     drawer and a tooltip. Panels sit ON the page and use a border. */
+  --lift-1: none;
+  --lift-2: none;
+  --lift-3: 0 16px 48px rgba(16,19,26,.14), 0 2px 8px rgba(16,19,26,.08);
+
+  --r:    6px;
+  --r-sm: 4px;
+
+  /* One easing curve for the whole product. A single curve is what makes
+     unrelated things — a drawer, a trail, a chevron — feel like one machine. */
+  --ease:   cubic-bezier(.22,.7,.3,1);
+  --t-fast: .14s;
+  --t:      .24s;
+  --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+  --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+
+  --strip-h: 58px;
+  --rail-w:  216px;
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink-2);
+  font: 13.5px/1.55 var(--sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Ambient field: two soft washes and a hairline grid, all far under the
+   threshold where anyone would call it a gradient. It should read as light in
+   the room, not as decoration. */
+.ambient {
+  position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background:
+    radial-gradient(58rem 40rem at 8% -6%,   rgba(47,62,174,.055), transparent 62%),
+    radial-gradient(46rem 34rem at 102% 8%,  rgba(14,124,102,.040), transparent 60%),
+    radial-gradient(40rem 32rem at 76% 108%, rgba(154,107,24,.030), transparent 60%),
+    linear-gradient(to right,  var(--hair) 1px, transparent 1px) 0 0 / 72px 72px,
+    linear-gradient(to bottom, var(--hair) 1px, transparent 1px) 0 0 / 72px 72px;
+  mask-image: linear-gradient(to bottom, #000 0, #000 58%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, #000 0, #000 58%, transparent 100%);
+}
+
+/* ── type ──────────────────────────────────────────────────────────────── */
+.lab {
+  font-size: 10px; font-weight: 650; letter-spacing: .11em;
+  text-transform: uppercase; color: var(--ink-3);
+}
+.num { font-variant-numeric: tabular-nums lining-nums; font-feature-settings: "tnum" 1; }
+.mono { font-family: var(--mono); font-size: .9em; letter-spacing: -.01em; }
+.dim { color: var(--ink-3); }
+
+/* THE FIGURE. Rupee mark small and lifted, integer at full weight, paise
+   stepped down — magnitude first, precision still present. */
+.fig { color: var(--ink); font-weight: 600; letter-spacing: -.022em;
+       font-variant-numeric: tabular-nums lining-nums; white-space: nowrap; }
+.fig .cur { font-size: .62em; font-weight: 550; color: var(--ink-3);
+            margin-right: .14em; vertical-align: .1em; }
+.fig .p   { font-size: .74em; font-weight: 500; color: var(--ink-3); letter-spacing: -.01em; }
+.fig-xl { font-size: 30px; line-height: 1.1; }
+.fig-l  { font-size: 20px; line-height: 1.2; }
+.fig-m  { font-size: 15px; }
+
+.sprite { display: none; }
+.ico { width: 16px; height: 16px; flex: none; fill: none; stroke: currentColor;
+       stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
+.ico.sm { width: 13px; height: 13px; }
+.ico.lg { width: 20px; height: 20px; }
+
+:where(a, button, select, input, summary, [tabindex]):focus-visible {
+  outline: 2px solid var(--indigo); outline-offset: 2px; border-radius: var(--r-sm);
+}
+
+.skip {
+  position: fixed; top: 10px; left: 10px; z-index: 100; transform: translateY(-200%);
+  background: var(--indigo); color: var(--on-accent); padding: 10px 16px;
+  border-radius: var(--r-sm); font-size: 12.5px; text-decoration: none;
+}
+.skip:focus-visible { transform: none; }
+
+/* ══ command strip — glass ═══════════════════════════════════════════════ */
+.strip {
+  display: flex; align-items: center; gap: 20px;
+  height: var(--strip-h); padding: 0 18px;
+  position: sticky; top: 0; z-index: 30;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+}
+.ident { display: flex; align-items: center; gap: 9px; }
+.ident .mark { color: var(--indigo); width: 20px; height: 20px; }
+.wordmark { color: var(--ink); font-weight: 600; font-size: 15.5px; letter-spacing: -.025em; }
+.wordmark b { color: var(--indigo); font-weight: 650; }
+
+.ctx { display: flex; gap: 10px; min-width: 0; }
+.ctl { display: flex; align-items: center; min-width: 0; }
+.ctl > span {
+  font-size: 9.5px; font-weight: 650; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--ink-3); background: var(--sunken);
+  border: 1px solid var(--line); border-right: 0;
+  border-radius: var(--r-sm) 0 0 var(--r-sm); padding: 0 9px;
+  height: 32px; display: flex; align-items: center; white-space: nowrap;
+}
+.ctl select { border-radius: 0 var(--r-sm) var(--r-sm) 0; max-width: 232px; }
+
+select, .btn, input[type=search], input[type=file] {
+  background: var(--surface); color: var(--ink-2);
+  border: 1px solid var(--line-2); border-radius: var(--r-sm);
+  padding: 0 10px; height: 32px; font: inherit; font-size: 12.5px;
+  transition: background-color .16s ease, border-color .16s ease,
+              color .16s ease, box-shadow .16s ease, transform .16s ease;
+}
+select:hover, .btn:hover { border-color: var(--ink-3); color: var(--ink); }
+.btn { cursor: pointer; display: inline-flex; align-items: center; gap: 7px;
+       white-space: nowrap; font-weight: 550; box-shadow: var(--lift-1); }
+.btn:hover { box-shadow: var(--lift-2); }
+.btn:active { transform: translateY(.5px); }
+.btn.primary {
+  background: linear-gradient(180deg, var(--indigo-hi), var(--indigo));
+  border-color: var(--indigo); color: var(--on-accent);
+  box-shadow: 0 1px 2px rgba(47,62,174,.28), 0 4px 14px rgba(47,62,174,.22);
+}
+.btn.primary:hover { color: var(--on-accent); border-color: var(--indigo);
+  box-shadow: 0 2px 4px rgba(47,62,174,.3), 0 8px 22px rgba(47,62,174,.28); }
+.btn[disabled] { opacity: .6; cursor: progress; transform: none; }
+.btn[disabled] .ico { animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Status lamps: a labelled key/value, never a bare coloured dot. */
+.lamps { margin-left: auto; display: flex; gap: 8px; }
+.lamp {
+  display: flex; align-items: center; gap: 7px; height: 32px; padding: 0 11px;
+  border-radius: var(--r-sm); background: var(--surface);
+  border: 1px solid var(--line); font-size: 11.5px; color: var(--ink-3); white-space: nowrap;
+}
+.lamp .k { font-size: 9.5px; font-weight: 650; letter-spacing: .1em; text-transform: uppercase; }
+.lamp .v { color: var(--ink-2); font-variant-numeric: tabular-nums; font-weight: 550; }
+.lamp.ok  { color: var(--emerald); border-color: rgba(14,124,102,.3); background: rgba(14,124,102,.06); }
+.lamp.ok .v { color: var(--emerald); }
+.lamp.bad { color: var(--coral); border-color: rgba(192,57,47,.35); background: rgba(192,57,47,.07); }
+.lamp.bad .v { color: var(--coral); }
+
+/* ══ shell ═══════════════════════════════════════════════════════════════ */
+.shell { display: grid; grid-template-columns: var(--rail-w) minmax(0,1fr); align-items: start; }
+
+.rail {
+  position: sticky; top: var(--strip-h); height: calc(100vh - var(--strip-h));
+  display: flex; flex-direction: column; gap: 2px; padding: 14px 10px;
+  background: var(--surface);
+  border-right: 1px solid var(--line);
+}
+.rail button {
+  display: flex; align-items: center; gap: 11px;
+  background: none; border: 1px solid transparent; border-radius: var(--r-sm);
+  color: var(--ink-2); padding: 9px 11px; cursor: pointer;
+  font: inherit; font-size: 13px; text-align: left; width: 100%;
+  transition: background-color .16s ease, color .16s ease, border-color .16s ease;
+}
+.rail button:hover { background: rgba(47,62,174,.05); color: var(--ink); }
+.rail button[aria-selected="true"] {
+  background: var(--surface); border-color: var(--line); color: var(--ink);
+  font-weight: 600; box-shadow: var(--lift-1);
+}
+.rail button[aria-selected="true"] .ico { color: var(--indigo); }
+.rail .count {
+  margin-left: auto; font-size: 10.5px; font-variant-numeric: tabular-nums; font-weight: 650;
+  background: rgba(154,107,24,.12); color: var(--bronze);
+  border-radius: 9px; padding: 1px 7px;
+}
+.creed {
+  margin-top: auto; padding: 13px 11px 4px; font-size: 11px; line-height: 1.55;
+  color: var(--ink-3); border-top: 1px solid var(--line);
+}
+.creed b { color: var(--ink-2); font-weight: 600; }
+
+main { padding: 20px; min-height: calc(100vh - var(--strip-h)); }
+main:focus { outline: none; }
+
+/* ══ panels — opaque, floating ═══════════════════════════════════════════ */
+.panel {
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--r); min-width: 0; box-shadow: var(--lift-1);
+}
+.panel > header {
+  display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap;
+  padding: 13px 16px; border-bottom: 1px solid var(--line);
+}
+.panel > header h2 {
+  margin: 0; font-size: 13px; font-weight: 650; letter-spacing: -.012em; color: var(--ink);
+}
+.panel > header .sub { font-size: 12px; color: var(--ink-3); }
+/* The pill row must wrap. It gained a model-name pill, which on a phone is
+   wide enough to push the header past the viewport and take the page with it. */
+.panel > header .right {
+  margin-left: auto; display: flex; gap: 8px; align-items: center;
+  flex-wrap: wrap; min-width: 0; justify-content: flex-end;
+}
+.panel > header .right .pill { max-width: 100%; }
+
+/* The one glass panel in the work area: the investigation header, which floats
+   above the case it describes. */
+.panel.glass > header {
+  background: var(--raised);
+  border-radius: var(--r) var(--r) 0 0;
+  position: sticky; top: 0; z-index: 3;
+}
+
+.stack { display: grid; gap: 16px; }
+.split { display: grid; grid-template-columns: minmax(0,7fr) minmax(0,8fr); gap: 16px; align-items: start; }
+.half  { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px,1fr)); gap: 16px; align-items: start; }
+/* A grid item defaults to min-width:auto and refuses to shrink below its widest
+   content — one of these holds a six-column table. Without this the PAGE
+   scrolls sideways instead of the table scrolling in its own pane. */
+.split > *, .stack > *, .half > * { min-width: 0; }
+
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(158px,1fr)); }
+.tile { padding: 14px 16px; border-right: 1px solid var(--line); }
+.tile:last-child { border-right: 0; }
+.tile .v { margin-top: 5px; }
+.tile .hint { color: var(--ink-3); font-size: 11.5px; margin-top: 3px; }
+
+.ok-t { color: var(--emerald); } .warn-t { color: var(--bronze); } .crit-t { color: var(--coral); }
+
+/* ══ tables — opaque and dense ═══════════════════════════════════════════ */
+table { width: 100%; border-collapse: collapse; }
+thead th {
+  position: sticky; top: 0; z-index: 1; background: var(--raised);
+  text-align: left; font-weight: 650; font-size: 9.5px; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--ink-3);
+  padding: 9px 14px; border-bottom: 1px solid var(--line); white-space: nowrap;
+}
+tbody td { padding: 10px 14px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+tbody tr[data-id] { cursor: pointer; transition: background-color .13s ease; }
+tbody tr[data-id]:hover { background: var(--raised); }
+tbody tr[aria-selected="true"] { background: var(--wash); box-shadow: inset 3px 0 0 var(--indigo); }
+tbody tr[data-id]:focus-visible { outline: 2px solid var(--indigo); outline-offset: -2px; }
+tbody tr:last-child td { border-bottom: 0; }
+.r { text-align: right; }
+.scroll { max-height: calc(100vh - 336px); overflow: auto; }
+.scrollx { overflow-x: auto; }
+
+/* ══ pills ═══════════════════════════════════════════════════════════════ */
+.pill {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 2px 9px 2px 7px; border-radius: 20px;
+  font-size: 11px; font-weight: 550; white-space: nowrap; border: 1px solid transparent;
+}
+.pill.ok   { background: rgba(14,124,102,.09); color: var(--emerald); border-color: rgba(14,124,102,.2); }
+.pill.warn { background: rgba(154,107,24,.10); color: var(--bronze);  border-color: rgba(154,107,24,.22); }
+.pill.crit { background: rgba(192,57,47,.08);  color: var(--coral);   border-color: rgba(192,57,47,.2); }
+.pill.info { background: rgba(47,62,174,.07);  color: var(--indigo);  border-color: rgba(47,62,174,.18); }
+.pill.mute { background: var(--sunken); color: var(--ink-3); border-color: var(--line); }
+
+/* ══ filters — glass floating bar ════════════════════════════════════════ */
+.filters {
+  display: flex; gap: 9px; align-items: center; flex-wrap: wrap;
+  padding: 11px 16px; border-bottom: 1px solid var(--line);
+  background: var(--raised);
+  position: sticky; top: 0; z-index: 2;
+}
+.chip {
+  background: var(--surface); border: 1px solid var(--line-2); border-radius: 20px;
+  color: var(--ink-2); padding: 0 12px; height: 29px;
+  display: inline-flex; align-items: center; gap: 7px;
+  font: inherit; font-size: 12px; cursor: pointer;
+  transition: background-color .14s ease, border-color .14s ease, color .14s ease, box-shadow .14s ease;
+}
+.chip:hover { border-color: var(--ink-3); color: var(--ink); box-shadow: var(--lift-1); }
+.chip[aria-pressed="true"] {
+  background: var(--indigo); border-color: var(--indigo); color: var(--on-accent);
+  box-shadow: 0 1px 3px rgba(47,62,174,.3);
+}
+.chip .n { font-variant-numeric: tabular-nums; opacity: .72; font-weight: 650; }
+
+.search {
+  display: inline-flex; align-items: center; gap: 8px;
+  flex: 1 1 200px; max-width: 300px; height: 29px; padding: 0 11px;
+  background: var(--surface); border: 1px solid var(--line-2);
+  border-radius: 20px; color: var(--ink-3);
+}
+.search:focus-within { outline: 2px solid var(--indigo); outline-offset: 1px; }
+.search input { background: none; border: 0; color: var(--ink); padding: 0;
+                font: inherit; font-size: 12.5px; width: 100%; min-width: 0; height: 100%; }
+.search input:focus-visible { outline: none; }
+
+/* Provenance stamp. Monospaced, boxed, slate — a reference, not prose. A
+   reviewer should be able to run their eye down the right edge and see that
+   nothing is unsourced. */
+.prov {
+  font-family: var(--mono); font-size: 10.5px; color: var(--slate);
+  background: rgba(42,111,142,.07); border: 1px solid rgba(42,111,142,.18);
+  border-radius: 4px; padding: 1px 6px; white-space: nowrap;
+}
+.prov .t { color: var(--ink-3); }
+
+/* ══ refusal ═════════════════════════════════════════════════════════════
+   A refusal is a safe decision, so it reads as a finding with evidence, never
+   as an error. Bronze rather than red; a stated reason, not an apology. */
+.verdict { display: flex; gap: 13px; align-items: flex-start; padding: 15px 16px;
+           border-bottom: 1px solid var(--line); }
+.verdict.post { background: linear-gradient(180deg, rgba(14,124,102,.06), transparent);
+                box-shadow: inset 3px 0 0 var(--emerald); }
+.verdict.post .ico { color: var(--emerald); }
+.verdict.hold { background: linear-gradient(180deg, rgba(154,107,24,.07), transparent);
+                box-shadow: inset 3px 0 0 var(--bronze); }
+.verdict.hold .ico { color: var(--bronze); }
+.verdict .ico { margin-top: 2px; }
+.verdict .head { color: var(--ink); font-weight: 650; font-size: 14px; letter-spacing: -.015em; }
+.verdict .why { color: var(--ink-2); font-size: 12.5px; margin-top: 5px; line-height: 1.55; }
+.cand { border: 1px solid var(--line); border-radius: var(--r-sm);
+        padding: 11px 13px; background: var(--raised); }
+.cand .meta { color: var(--ink-3); font-size: 11.5px; margin-top: 5px; }
+
+/* Policy gates: a checklist that was evaluated, not an error list. */
+.gates { margin: 0; padding: 0; list-style: none; }
+.gates li { display: flex; gap: 10px; align-items: flex-start; padding: 9px 16px;
+            font-size: 12.5px; color: var(--ink-2); border-bottom: 1px solid var(--line); }
+.gates li:last-child { border-bottom: 0; }
+.gates .ico { margin-top: 2px; }
+.gates li.fail .ico { color: var(--bronze); }
+.gates li.pass .ico { color: var(--emerald); }
+
+/* Confidence: a bar, because "0.999999" and "0.90" look alike at a glance. */
+.conf { display: inline-flex; align-items: center; gap: 9px; }
+.conf .t { width: 68px; height: 5px; background: var(--sunken); border-radius: 3px; overflow: hidden; }
+.conf .t > i { display: block; height: 100%; background: var(--indigo); border-radius: 3px; }
+.conf.low .t > i { background: var(--bronze); }
+
+/* ══ audit chain strip ═══════════════════════════════════════════════════ */
+.chainstrip { padding: 16px; }
+.segs { display: flex; flex-wrap: wrap; gap: 3px; }
+.seg { width: 10px; height: 24px; border-radius: 2px; transition: transform .14s ease; }
+.seg:hover { transform: scaleY(1.14); }
+.seg.auto { background: var(--emerald); opacity: .85; }
+.seg.esc  { background: var(--bronze); opacity: .8; }
+.hashline { font-family: var(--mono); font-size: 10.5px; color: var(--ink-3); word-break: break-all;
+            background: var(--sunken); border: 1px solid var(--line);
+            border-radius: var(--r-sm); padding: 10px 12px; margin-top: 14px; }
+.hashline b { color: var(--slate); font-weight: 500; }
+
+/* ══ charts ══════════════════════════════════════════════════════════════ */
+.chart { padding: 16px 16px 6px; }
+.chart svg { display: block; width: 100%; height: auto; overflow: visible; }
+.chart text { font-family: var(--sans); font-size: 10px; fill: var(--ink-3); }
+.chart .axis { stroke: var(--line-2); stroke-width: 1; }
+.chart .gridline { stroke: var(--line); stroke-width: 1; }
+.chart .line { fill: none; stroke-width: 2.25; stroke-linejoin: round; stroke-linecap: round; }
+.chart .dot { r: 4; }
+.chart .ring { stroke: var(--surface); stroke-width: 2; }
+.legend { display: flex; gap: 16px; flex-wrap: wrap; padding: 2px 16px 14px;
+          font-size: 11.5px; color: var(--ink-2); }
+.legend .k { display: inline-flex; align-items: center; gap: 7px; }
+.legend .sw { width: 11px; height: 3px; border-radius: 2px; }
+.opmark { stroke: var(--bronze); stroke-width: 1; stroke-dasharray: 3 3; }
+.bar-track { height: 7px; background: var(--sunken); border-radius: 4px; overflow: hidden; }
+.bar-track > i { display: block; height: 100%; background: var(--indigo-2); border-radius: 4px; }
+
+/* ══ misc ════════════════════════════════════════════════════════════════ */
+.tip {
+  position: fixed; z-index: 60; pointer-events: none;
+  background: var(--surface);
+  border: 1px solid var(--line-2); border-radius: var(--r-sm);
+  padding: 9px 11px; font-size: 11.5px; color: var(--ink-2);
+  box-shadow: var(--lift-3); max-width: 300px;
+}
+.tip .t { color: var(--ink); margin-bottom: 5px; font-weight: 600; }
+.tip .row { display: flex; justify-content: space-between; gap: 18px; }
+.tip .row span:last-child { color: var(--ink); font-variant-numeric: tabular-nums; }
+
+.note { color: var(--ink-3); font-size: 12px; padding: 12px 16px; line-height: 1.55; }
+.note.warn { color: var(--bronze); }
+.note.top { border-top: 1px solid var(--line); }
+.section { padding: 13px 16px 0; }
+.section > .h { color: var(--ink-3); font-size: 9.5px; letter-spacing: .1em;
+                text-transform: uppercase; font-weight: 650; }
+.empty { padding: 48px 16px; text-align: center; color: var(--ink-3);
+         display: flex; flex-direction: column; align-items: center; gap: 11px; }
+.empty .ico { width: 24px; height: 24px; stroke-width: 1.5; color: var(--line-2); }
+.empty b { color: var(--ink-2); font-weight: 600; }
+
+.toast {
+  position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%);
+  background: var(--ink); color: #fff; border-radius: var(--r-sm);
+  padding: 12px 18px; z-index: 80; box-shadow: var(--lift-3);
+  font-size: 12.5px; max-width: calc(100vw - 32px);
+  animation: toastIn .22s cubic-bezier(.22,.7,.3,1);
+}
+@keyframes toastIn { from { opacity: 0; transform: translate(-50%, 8px); } }
+
+input[type=file] { max-width: 320px; cursor: pointer; padding: 0 9px; }
+input[type=file]::file-selector-button {
+  background: var(--sunken); color: var(--ink-2); border: 1px solid var(--line-2);
+  border-radius: 4px; padding: 3px 11px; margin: 0 11px 0 0;
+  font: inherit; font-size: 11.5px; cursor: pointer;
+}
+input[type=file]::file-selector-button:hover { border-color: var(--ink-3); color: var(--ink); }
+
+.sk { background: linear-gradient(90deg, var(--sunken), var(--raised), var(--sunken));
+      background-size: 200% 100%; border-radius: 4px; height: 11px;
+      animation: shimmer 1.5s ease-in-out infinite; }
+.sk.v { height: 24px; margin-top: 7px; }
+.sk.w40 { width: 40%; } .sk.w60 { width: 60%; } .sk.w80 { width: 80%; }
+.skrow { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 14px;
+         padding: 12px 14px; border-bottom: 1px solid var(--line); }
+@keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+/* ══ responsive ══════════════════════════════════════════════════════════
+   The fixed grids that make a dense console readable at 1440 are exactly what
+   overflows at 375, so each is released rather than scaled. */
+@media (max-width: 1240px) {
+  .split { grid-template-columns: 1fr; }
+  .headline { grid-template-columns: 1fr; }
+  .headline .lede { border-right: 0; border-bottom: 1px solid var(--line); }
+}
+
+@media (max-width: 900px) {
+  .shell { grid-template-columns: 1fr; }
+  .rail { position: static; height: auto; flex-direction: row; gap: 4px;
+          padding: 8px 10px; overflow-x: auto; scrollbar-width: none;
+          border-right: 0; border-bottom: 1px solid var(--line); }
+  .rail::-webkit-scrollbar { display: none; }
+  .rail button { width: auto; white-space: nowrap; min-height: 44px; }
+  .rail .creed { display: none; }
+  .strip { position: static; height: auto; flex-wrap: wrap; gap: 10px 14px; padding: 11px 14px; }
+  /* The label+select pair is an inline-grid at desktop width; on a phone each
+     half has to be allowed to shrink, or the pair sets a min-content floor and
+     pushes the whole page sideways. */
+  .ctx { order: 3; width: 100%; gap: 8px; }
+  .ctl { flex: 1 1 46%; min-width: 0; }
+  .ctl select { flex: 1 1 auto; min-width: 0; width: 100%; max-width: none; }
+  .lamps { margin-left: auto; }
+  main { padding: 14px; min-height: 0; }
+  .scroll { max-height: none; }
+  .filters, .panel.glass > header { position: static; }
+  /* 44px is the interaction floor on touch, not 42. */
+  select, .btn, .chip, .search, input[type=file], input[type=search] { height: 44px; }
+  .cands { grid-template-columns: 1fr; }
+  .cands .vs { flex-direction: row; padding: 2px 0; }
+  .cands .vs .bar { height: 1px; width: auto; flex: 1; }
+}
+
+@media (max-width: 560px) {
+  body { font-size: 14px; }              /* below 16px inputs, iOS zooms on focus */
+  select, .btn, input, .search input { font-size: 16px; }
+  .tiles { grid-template-columns: 1fr 1fr; }
+  .tile { border-right: 0; border-bottom: 1px solid var(--line); }
+  .headline .lede .big { font-size: 32px; }
+  .fig-xl { font-size: 24px; }
+  .btn.primary .t { display: none; }
+  .lamp .k { display: none; }
+  input[type=file] { max-width: none; flex: 1 1 100%; }
+}
+
+/* Nothing here communicates by moving, so under a reduced-motion preference
+   all of it stops. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .001ms !important; animation-iteration-count: 1 !important;
+    transition-duration: .001ms !important;
+  }
+}
+
+/* ══ control trace ═══════════════════════════════════════════════════════
+   A narrow execution spine beside the investigation, so an evaluator can see
+   ingest -> match -> exception -> LLM -> tool -> evidence -> arithmetic ->
+   policy -> ledger without reading a backend log.
+
+   Deliberately reuses the existing tokens and the node/spine idiom already used
+   by the evidence chain. It is a second view of the same story, not a second
+   design language. Nothing here is a log console: no levels, no paths, no SQL. */
+.split3 {
+  display: grid; grid-template-columns: 236px minmax(0,6fr) minmax(0,7fr);
+  gap: 16px; align-items: start;
+}
+.split3 > * { min-width: 0; }
+
+.trace { padding: 4px 0 8px; }
+.trace .ev {
+  display: grid; grid-template-columns: 16px minmax(0,1fr); gap: 9px;
+  padding: 0 14px; position: relative;
+}
+.trace .ev .spine { position: relative; display: flex; justify-content: center; }
+.trace .ev .spine::before {
+  content: ""; position: absolute; top: 0; bottom: 0; width: 1px; background: var(--line);
+}
+.trace .ev:first-child .spine::before { top: 9px; }
+.trace .ev:last-child .spine::before { bottom: calc(100% - 9px); }
+.trace .ev .mark {
+  width: 7px; height: 7px; border-radius: 50%; margin-top: 6px; z-index: 1;
+  background: var(--line-2); box-shadow: 0 0 0 3px var(--surface);
+}
+.trace .ev.ok     .mark { background: var(--emerald); }
+.trace .ev.warn   .mark { background: var(--bronze); }
+.trace .ev.active .mark { background: var(--indigo); }
+.trace .ev.muted  .mark { background: var(--line-2); }
+.trace .ev .body { padding-bottom: 11px; min-width: 0; }
+.trace .ev .stg {
+  font-size: 9px; font-weight: 650; letter-spacing: .11em; text-transform: uppercase;
+  color: var(--ink-3);
+}
+.trace .ev.active .stg { color: var(--indigo); }
+.trace .ev.warn   .stg { color: var(--bronze); }
+.trace .ev .ttl { color: var(--ink); font-size: 12px; margin-top: 1px; line-height: 1.4; }
+.trace .ev .det {
+  color: var(--ink-3); font-size: 11px; margin-top: 3px; line-height: 1.45;
+  display: none;                        /* progressive disclosure, opened on click */
+}
+.trace .ev[aria-expanded="true"] .det { display: block; }
+.trace .ev .src {
+  font-family: var(--mono); font-size: 10px; color: var(--slate);
+  margin-top: 3px; word-break: break-all; display: none;
+}
+.trace .ev[aria-expanded="true"] .src { display: block; }
+.trace .ev button.hit {
+  all: unset; cursor: pointer; display: block; width: 100%;
+  border-radius: var(--r-sm); transition: background-color .13s ease;
+}
+.trace .ev button.hit:hover { background: var(--raised); }
+.trace .ev button.hit:focus-visible { outline: 2px solid var(--indigo); outline-offset: 2px; }
+
+/* The architecture caption: four words that say who does what. */
+.trace-rule {
+  display: grid; grid-template-columns: auto 1fr; gap: 3px 9px;
+  padding: 11px 14px; margin-top: 2px; border-top: 1px solid var(--line);
+  font-size: 10.5px; color: var(--ink-3);
+}
+.trace-rule b { color: var(--ink-2); font-weight: 650; letter-spacing: .04em; }
+
+.live {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 9.5px; font-weight: 650; letter-spacing: .1em; text-transform: uppercase;
+}
+.live i { width: 6px; height: 6px; border-radius: 50%; background: var(--emerald); }
+.live.idle i { background: var(--line-2); }
+
+@media (max-width: 1240px) { .split3 { grid-template-columns: 1fr; } }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   INVESTIGATION CONSOLE
+   Added when the product stopped being a dashboard of metrics and became a
+   place where one case is worked at a time. Everything below reuses the tokens
+   above; nothing introduces a new colour, and nothing floats.
+   ═════════════════════════════════════════════════════════════════════════ */
+
+/* ── overview: a metric RAIL, not a wall of cards ─────────────────────────
+   Four figures on one line, separated by hairlines. Cards would give each
+   number its own border and equal weight; an operator needs to read them as
+   one sentence about the run. */
+.greet { padding: 2px 0 18px; }
+.greet .hi { color: var(--ink-3); font-size: 13px; }
+.greet h1 { margin: 4px 0 0; font-size: 25px; font-weight: 650;
+            letter-spacing: -.03em; color: var(--ink); }
+.greet .sub { color: var(--ink-3); font-size: 13px; margin-top: 5px; }
+.greet .act { margin-top: 15px; display: flex; gap: 9px; flex-wrap: wrap; }
+
+.rail-metrics {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(148px, 1fr));
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--r);
+}
+.rail-metrics .m { padding: 15px 18px; border-right: 1px solid var(--line); }
+.rail-metrics .m:last-child { border-right: 0; }
+.rail-metrics .m .v { margin-top: 5px; }
+.rail-metrics .m .k { color: var(--ink-3); font-size: 11.5px; margin-top: 3px; }
+@media (max-width: 620px) {
+  .rail-metrics .m { border-right: 0; border-bottom: 1px solid var(--line); }
+  .rail-metrics .m:last-child { border-bottom: 0; }
+}
+
+/* ── case rows: money first, then what is wrong, then what was done ─────── */
+.cases { display: grid; }
+.case {
+  display: grid; grid-template-columns: 170px minmax(0,1fr) auto;
+  gap: 18px; align-items: center; width: 100%; text-align: left;
+  padding: 13px 16px; border: 0; border-bottom: 1px solid var(--line);
+  background: var(--surface); font: inherit; cursor: pointer;
+  transition: background-color .12s ease;
+}
+.case:last-child { border-bottom: 0; }
+.case:hover { background: var(--raised); }
+.case:focus-visible { outline: 2px solid var(--indigo); outline-offset: -2px; }
+.case .why { color: var(--ink); font-size: 13.5px; font-weight: 550; }
+.case .meta { color: var(--ink-3); font-size: 12px; margin-top: 2px; }
+.case .go { color: var(--ink-3); display: flex; align-items: center; gap: 9px; }
+.case:hover .go { color: var(--indigo); }
+@media (max-width: 720px) {
+  .case { grid-template-columns: 1fr; gap: 7px; }
+  .case .go { justify-content: flex-start; }
+}
+
+/* ── workspace: three panes, collapsing to one column ───────────────────── */
+.ws { display: grid; grid-template-columns: 244px minmax(0,1fr) 264px; gap: 14px;
+      align-items: start; }
+.ws > * { min-width: 0; }
+@media (max-width: 1340px) { .ws { grid-template-columns: 232px minmax(0,1fr); } }
+@media (max-width: 980px)  { .ws { grid-template-columns: 1fr; } }
+
+.crumb { display: flex; align-items: center; gap: 8px; padding: 0 0 13px;
+         font-size: 12.5px; color: var(--ink-3); flex-wrap: wrap; }
+.crumb button { all: unset; cursor: pointer; color: var(--indigo);
+                display: inline-flex; align-items: center; gap: 6px; }
+.crumb button:hover { text-decoration: underline; }
+.crumb button:focus-visible { outline: 2px solid var(--indigo); outline-offset: 3px;
+                              border-radius: 3px; }
+.crumb .sep { color: var(--line-2); }
+.crumb .now { color: var(--ink); font-weight: 550; }
+.crumb .end { margin-left: auto; }
+
+/* ── THE MONEY TRAIL ──────────────────────────────────────────────────────
+   The centrepiece. Money runs down the page in the order it actually moved,
+   and every node is a real row you can select. Deductions branch to the right
+   because they LEAVE the flow, so the geometry carries the direction and the
+   labels do not have to. */
+.trail { padding: 16px 16px 6px; }
+.tnode { display: grid; grid-template-columns: 24px minmax(0,1fr); gap: 12px; }
+.tnode .gut { position: relative; display: flex; justify-content: center; }
+.tnode .gut::before { content: ""; position: absolute; top: 0; bottom: 0;
+                      width: 2px; background: var(--line-2); }
+.tnode:first-child .gut::before { top: 15px; }
+.tnode.last .gut::before { bottom: calc(100% - 15px); }
+.tnode .pip { width: 11px; height: 11px; border-radius: 50%; margin-top: 10px;
+              z-index: 1; background: var(--surface); border: 2px solid var(--line-2); }
+.tnode.is-in   .pip { border-color: var(--indigo); }
+.tnode.is-out  .pip { border-color: var(--bronze); }
+.tnode.is-ok   .pip { border-color: var(--emerald); background: var(--emerald); }
+.tnode.is-stop .pip { border-color: var(--bronze); background: var(--bronze); }
+
+.tcard {
+  width: 100%; text-align: left; font: inherit; cursor: pointer;
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--r-sm); padding: 10px 13px; margin-bottom: 9px;
+  transition: border-color .12s ease, background-color .12s ease;
+  display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 4px 14px;
+  align-items: baseline;
+}
+.tcard:hover { border-color: var(--line-2); background: var(--raised); }
+.tcard:focus-visible { outline: 2px solid var(--indigo); outline-offset: 2px; }
+.tcard[aria-selected="true"] { border-color: var(--indigo); background: var(--wash);
+                               box-shadow: inset 2px 0 0 var(--indigo); }
+.tcard .lab { grid-column: 1 / -1; }
+.tcard .who { color: var(--ink); font-weight: 600; font-size: 13px; }
+.tcard .note { grid-column: 1 / -1; padding: 2px 0 0; color: var(--ink-3);
+               font-size: 11.5px; line-height: 1.45; }
+.tcard .ref { font-family: var(--mono); font-size: 10.5px; color: var(--slate); }
+
+/* Deductions: indented, lighter, plainly a branch off the spine. */
+.tbranch { margin: -3px 0 9px 36px; border-left: 1px dashed var(--line-2);
+           padding-left: 14px; display: grid; }
+.tbranch .b { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 12px;
+              padding: 3px 0; font-size: 12.5px; color: var(--ink-2); align-items: baseline; }
+.tbranch .b.zero { color: var(--ink-3); opacity: .45; }
+
+/* The fork: two candidates nothing can separate. */
+.fork { display: grid; grid-template-columns: 1fr auto 1fr; gap: 12px;
+        align-items: stretch; padding: 2px 0 10px 36px; }
+.fork .c { border: 1px solid var(--line); border-radius: var(--r-sm);
+           padding: 10px 12px; background: var(--raised); }
+.fork .mid { display: flex; flex-direction: column; align-items: center;
+             justify-content: center; gap: 6px; color: var(--ink-3);
+             font-size: 15px; font-weight: 600; }
+.fork .mid i { width: 1px; flex: 1; background: var(--line-2); }
+@media (max-width: 640px) {
+  .fork { grid-template-columns: 1fr; padding-left: 14px; }
+  .fork .mid { flex-direction: row; }
+  .fork .mid i { height: 1px; width: auto; flex: 1; }
+}
+
+/* ── exact-amount reconstruction, revealed on demand ─────────────────────── */
+.calc { margin: 1px 0 10px 36px; border: 1px solid var(--line);
+        border-radius: var(--r-sm); background: var(--sunken); padding: 12px 14px; }
+.calc .r { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 14px;
+           padding: 3px 0; font-size: 12.5px; color: var(--ink-2); }
+.calc .r.zero { opacity: .45; }
+.calc .r.sum { border-top: 1px solid var(--line-2); margin-top: 6px; padding-top: 7px;
+               color: var(--ink); font-weight: 600; }
+.calc .verdict { margin-top: 10px; padding-top: 9px; border-top: 1px solid var(--line-2);
+                 display: flex; align-items: center; gap: 8px; font-size: 12.5px; }
+
+/* ── evidence column ──────────────────────────────────────────────────────
+   Dimmed until a trail node is selected, so the link between the node and the
+   rows that support it is visible rather than asserted. */
+.evlist { display: grid; }
+.evrow { padding: 10px 14px; border-bottom: 1px solid var(--line);
+         transition: background-color .12s ease, opacity .12s ease; }
+.evrow:last-child { border-bottom: 0; }
+.evrow .claim { color: var(--ink-2); font-size: 12.5px; line-height: 1.5; }
+.evrow .id { margin-top: 5px; }
+.evlist.filtered .evrow { opacity: .3; }
+.evlist.filtered .evrow.hit { opacity: 1; background: var(--wash);
+                              box-shadow: inset 2px 0 0 var(--indigo); }
+
+/* ── drawer ───────────────────────────────────────────────────────────────
+   The one component allowed to float, because it genuinely sits above the
+   page rather than in it. */
+.scrim { position: fixed; inset: 0; background: rgba(16,19,26,.28); z-index: 70;
+         animation: fade .16s ease; border: 0; padding: 0; cursor: default; }
+.drawer { position: fixed; top: 0; right: 0; bottom: 0; width: min(430px, 100vw);
+          background: var(--surface); border-left: 1px solid var(--line-2);
+          box-shadow: var(--lift-3); z-index: 71; overflow-y: auto;
+          animation: slide .2s cubic-bezier(.22,.7,.3,1); }
+@keyframes fade { from { opacity: 0; } }
+@keyframes slide { from { transform: translateX(18px); opacity: 0; } }
+.drawer > header { position: sticky; top: 0; background: var(--surface);
+                   border-bottom: 1px solid var(--line); padding: 13px 16px;
+                   display: flex; align-items: center; gap: 10px; z-index: 1; }
+.drawer > header h2 { margin: 0; font-size: 13px; font-weight: 650; color: var(--ink); }
+.drawer .x { margin-left: auto; }
+.drawer .body { padding: 2px 16px 24px; }
+.facts { padding: 2px 16px 12px; }
+.drawer .f, .facts .f { padding: 11px 0; border-bottom: 1px solid var(--line); }
+.drawer .f:last-child, .facts .f:last-child { border-bottom: 0; }
+.drawer .f .v, .facts .f .v { margin-top: 4px; color: var(--ink); font-size: 13.5px; }
+.drawer .f .v.break, .facts .f .v.break { word-break: break-all; }
+.facts .f .meta { color: var(--ink-3); font-size: 11.5px; line-height: 1.5; }
+
+/* ── run progress: real stages only, no invented percentage ─────────────── */
+.stages { display: grid; padding: 4px 0; }
+.stg { display: grid; grid-template-columns: 16px minmax(0,1fr); gap: 10px;
+       align-items: center; padding: 6px 0; font-size: 12.5px; color: var(--ink-3); }
+.stg .d { width: 7px; height: 7px; border-radius: 50%; margin: 0 auto;
+          background: var(--line-2); }
+.stg.on { color: var(--ink); }
+.stg.on .d { background: var(--indigo); animation: beat 1.1s ease-in-out infinite; }
+.stg.done { color: var(--ink-2); }
+.stg.done .d { background: var(--emerald); }
+@keyframes beat { 50% { opacity: .3; } }
+
+/* ── integrity strip ─────────────────────────────────────────────────────── */
+.integrity { display: grid; }
+.integrity .i { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 12px;
+                padding: 11px 16px; border-bottom: 1px solid var(--line);
+                font-size: 13px; color: var(--ink-2); align-items: center; }
+.integrity .i:last-child { border-bottom: 0; }
+
+/* The one place a large statement is warranted: the answer to a yes/no
+   question about whether the ledger can still be trusted. */
+.attest { padding: 20px 18px; display: flex; align-items: center; gap: 15px; }
+.attest .big { font-size: 23px; font-weight: 650; letter-spacing: -.02em; }
+.attest.ok .big  { color: var(--emerald); }
+.attest.bad .big { color: var(--coral); }
+.attest .sub { color: var(--ink-3); font-size: 12.5px; margin-top: 3px; }
+.attest .ico { width: 26px; height: 26px; }
+.attest.ok .ico  { color: var(--emerald); }
+.attest.bad .ico { color: var(--coral); }
+
+@media (prefers-reduced-motion: reduce) {
+  .scrim, .drawer { animation: none !important; }
+  .stg.on .d { animation: none !important; }
+}
+
+/* Fork candidate cards reuse the trail's label/reference type, one step down. */
+.fork .c .lab { color: var(--ink-3); font-size: 10.5px; letter-spacing: .07em;
+                text-transform: uppercase; margin-bottom: 5px; }
+.fork .c .ref { font-family: var(--mono); font-size: 10.5px; color: var(--slate); margin-top: 3px; }
+
+/* The trace's stage mark now carries an icon rather than a bare dot. */
+.trace .ev .mark { display: flex; align-items: center; justify-content: center; }
+.trace .ev .mark .ico { width: 11px; height: 11px; }
+
+/* A case row's status column keeps the badge and chevron from wrapping apart. */
+.case .go .pill { white-space: nowrap; }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   MOTION
+   Three rules govern everything here.
+
+   1. Movement means something or it does not happen. The trail cascades
+      because the money moved in that order; a panel grows out of the control
+      that opened it; a chevron leans toward the thing it opens. Nothing on
+      this screen moves to look alive.
+   2. It plays when the VIEW changes, never on every re-render. render()
+      rebuilds the subtree on each click, so entrance animation is opt-in per
+      paint (see markEnter in app.js) — otherwise selecting one trail node
+      would replay the entire screen, which is both ugly and a lie about what
+      just happened.
+   3. It is short. Nothing below runs past 340 ms, and the longest chain of
+      delays resolves inside half a second.
+   ═════════════════════════════════════════════════════════════════════════ */
+
+@keyframes riseIn {
+  from { opacity: 0; transform: translateY(7px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* Panels arrive top to bottom, quickly. The workspace is excluded because its
+   three panes have their own, more deliberate entrance below. */
+.enter > *:not(.ws) {
+  opacity: 0;
+  animation: riseIn .3s var(--ease) forwards;
+  animation-delay: calc(var(--i, 0) * 45ms);
+}
+
+/* Case context, then money trail, then evidence — left to right, the order you
+   read them in. */
+.enter .ws > * { opacity: 0; animation: riseIn .3s var(--ease) forwards; }
+.enter .ws > *:nth-child(1) { animation-delay: 40ms; }
+.enter .ws > *:nth-child(2) { animation-delay: 90ms; }
+.enter .ws > *:nth-child(3) { animation-delay: 150ms; }
+
+/* The one cascade that is earned. Each step of the trail appears in the order
+   the money actually moved, slow enough to be followed and short enough that
+   nobody waits for it. */
+.enter .trail > * {
+  opacity: 0;
+  animation: riseIn .28s var(--ease) forwards;
+  animation-delay: calc(170ms + var(--i, 0) * 55ms);
+}
+
+/* A queue reveals as a list, not as fifty separate arrivals: the stagger caps
+   out after the rows that are actually above the fold. */
+.enter .cases > *, .enter .integrity > *, .enter tbody tr {
+  opacity: 0;
+  animation: riseIn .26s var(--ease) forwards;
+  animation-delay: calc(70ms + var(--i, 0) * 26ms);
+}
+
+/* Panels that open from a control fade in place. Height is NOT animated: a
+   max-height tween on content of unknown length finishes early and snaps, and
+   the honest alternative — reflow now, reveal over 200 ms — reads better. */
+@keyframes revealIn {
+  from { opacity: 0; transform: translateY(-5px); }
+  to   { opacity: 1; transform: none; }
+}
+.calc, .trace .ev .calc, .tbranch, .fork {
+  animation: revealIn .2s var(--ease);
+}
+
+/* The chevron leans toward the case it opens. */
+.case .go .ico { transition: transform var(--t-fast) var(--ease); }
+.case:hover .go .ico, .case:focus-visible .go .ico { transform: translateX(3px); }
+
+/* Selection on the trail: the card takes its ring, and the pip on the spine
+   takes a halo, so the eye can find the selected step from the rail alone. */
+.tcard { transition: border-color var(--t-fast) var(--ease),
+                     background-color var(--t-fast) var(--ease),
+                     box-shadow var(--t-fast) var(--ease); }
+.tnode .pip { transition: box-shadow var(--t) var(--ease),
+                          background-color var(--t) var(--ease),
+                          border-color var(--t) var(--ease); }
+.tnode:has(.tcard[aria-selected="true"]) .pip { box-shadow: 0 0 0 4px var(--wash); }
+
+/* Rail, chips and rows settle rather than snap. */
+.rail button, .chip, .btn { transition: background-color var(--t-fast) var(--ease),
+                                        color var(--t-fast) var(--ease),
+                                        border-color var(--t-fast) var(--ease); }
+tbody tr { transition: background-color var(--t-fast) var(--ease); }
+
+/* A control trace event turns over as it opens. */
+.trace .ev .hit .stg { transition: color var(--t-fast) var(--ease); }
+
+@media (prefers-reduced-motion: reduce) {
+  /* The global block above collapses every duration; delays have to go too, or
+     a staggered element stays at opacity 0 for the length of its delay. */
+  *, *::before, *::after { animation-delay: 0s !important; transition-delay: 0s !important; }
+  .enter > *, .enter .ws > *, .enter .trail > *, .enter .cases > *,
+  .enter .integrity > *, .enter tbody tr { opacity: 1 !important; }
+}
+
+/* The posture lamp is the way in to the key this browser holds, so it is a real
+   button: focusable, and obviously pressable. */
+button.lamp { font: inherit; cursor: pointer; }
+button.lamp:hover { border-color: var(--line-2); background: var(--raised); }
+button.lamp:focus-visible { outline: 2px solid var(--indigo); outline-offset: 2px; }
+.lamp.bad { border-color: rgba(192,57,47,.28); background: rgba(192,57,47,.06); }
+.lamp.bad .txt, .lamp.bad .ico { color: var(--coral); }

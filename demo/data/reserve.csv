@@ -1,0 +1,2 @@
+reserve_id,amount,held_on,release_date,released_at_ist,netted_flag
+rsv_d01,5000.00,2025-09-12,2025-12-12,2025-12-12T09:00:00+05:30,false

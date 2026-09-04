@@ -1,0 +1,148 @@
+{
+  "preset": "full",
+  "summary": {
+    "preset": "full",
+    "model_version": "settleiq-pairscorer-1.0.0",
+    "wall_ms": 777,
+    "payments": 5012,
+    "settlements": 86,
+    "bank_rows": 211,
+    "bank_matched": 86,
+    "exact_matches": 44,
+    "candidate_pairs": 122,
+    "payment_links": 4781,
+    "ambiguous_payments": 48,
+    "exceptions": 78,
+    "residue_net_paise": -114885,
+    "residue_abs_paise": 2396237,
+    "gross_matched_paise": 623185354,
+    "auto_posted": 10,
+    "escalated": 68,
+    "suppressed_duplicate": 0,
+    "audit_rows": 78,
+    "audit_head": "b6a8ea0001aa5f973d8add8fa5c2eff81b9e5170bccc5e304607ee47ab19c737",
+    "h1_dates": 25,
+    "h2_batches": 0,
+    "failed_dates": 0,
+    "unassigned_payments": 0,
+    "timings": {
+      "stage0_normalise": 22,
+      "stage1_4_match": 54,
+      "stage5_netting": 61,
+      "stage6_decompose": 49,
+      "stage6b_agent_policy": 385
+    }
+  },
+  "overall": {
+    "row": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "amt": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "tp": 4781,
+    "fp": 0,
+    "fn": 0,
+    "tp_amt": 623185354,
+    "fp_amt": 0,
+    "fn_amt": 0
+  },
+  "train": {
+    "row": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "amt": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "tp": 2346,
+    "fp": 0,
+    "fn": 0,
+    "tp_amt": 304412642,
+    "fp_amt": 0,
+    "fn_amt": 0
+  },
+  "dev": {
+    "row": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "amt": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "tp": 856,
+    "fp": 0,
+    "fn": 0,
+    "tp_amt": 113210590,
+    "fp_amt": 0,
+    "fn_amt": 0
+  },
+  "test": {
+    "row": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "amt": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "tp": 1579,
+    "fp": 0,
+    "fn": 0,
+    "tp_amt": 205562122,
+    "fp_amt": 0,
+    "fn_amt": 0
+  },
+  "auto_posted": 4733,
+  "auto_false_match_rate": 0.0,
+  "auto_false_match_amt": 0,
+  "auto_resolution_rate": 0.9899602593599666,
+  "refused": 48,
+  "refused_justified": 48,
+  "exception_precision": 1.0,
+  "trap_recall": 1.0,
+  "traps_total": 48,
+  "planted_total": 12,
+  "planted_caught": 12,
+  "ambiguous_missed": 0,
+  "residue_net": -114885,
+  "residue_abs": 2396237,
+  "residue_pct_gmv": 0.38451433183071887,
+  "gmv": 623185354,
+  "irreducible": 226057,
+  "residue_buckets": {
+    "exact_to_the_paise": 37,
+    "within_Rs_1": 4,
+    "Rs_1_to_100": 25,
+    "over_Rs_100": 20
+  },
+  "cost_of_error": {
+    "false_matches": 0,
+    "false_match_cost_paise": 0,
+    "missed_or_refused": 48,
+    "missed_cost_paise": 576000,
+    "total_paise": 576000,
+    "assumptions": {
+      "unwind_hours_per_false_match": 2.5,
+      "analyst_minutes_per_miss": 6.0,
+      "analyst_rate_per_hour": "1200.00"
+    },
+    "cost_if_nothing_refused_paise": 7200000
+  },
+  "bank_links_correct": 86,
+  "bank_links_wrong": 0,
+  "bank_links_predicted": 86,
+  "bank_links_total": 86
+}

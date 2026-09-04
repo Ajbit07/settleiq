@@ -1,0 +1,42 @@
+{
+  "merchant_id": "mrch_HARDNET",
+  "name": "Hard Netting Fixture",
+  "gst_rate_pct": "0.0",
+  "tds_rate_pct": "0.0",
+  "reserve_rate_pct": "0.0",
+  "reserve_methods": [],
+  "reserve_hold_days": 90,
+  "instant_surcharge_pct": "0.0",
+  "dispute_fee": "0.00",
+  "tolerance_paise": 100,
+  "methods": {
+    "upi": [
+      {
+        "effective_from": "2025-11-01",
+        "pct": "0.00",
+        "flat_paise": 0
+      }
+    ],
+    "card": [
+      {
+        "effective_from": "2025-11-01",
+        "pct": "0.00",
+        "flat_paise": 0
+      }
+    ],
+    "netbanking": [
+      {
+        "effective_from": "2025-11-01",
+        "pct": "0.00",
+        "flat_paise": 0
+      }
+    ],
+    "wallet": [
+      {
+        "effective_from": "2025-11-01",
+        "pct": "0.00",
+        "flat_paise": 0
+      }
+    ]
+  }
+}

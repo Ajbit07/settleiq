@@ -1,0 +1,2 @@
+dispute_id,payment_id,amount,fee,raised_at_ist,reversed_at_ist
+disp_d01,pay_d07,2000.00,300.00,2025-12-04T10:00:00+05:30,

@@ -1,0 +1,26 @@
+# Build output
+target/
+engine/out/
+*.class
+
+# Python
+__pycache__/
+*.pyc
+
+# Local config: copy .env.example to .env and edit. Never commit real keys.
+.env
+
+# Evaluation output. reports/metrics/ is deliberately NOT ignored -- the API
+# mounts it read-only to serve the Metrics screen, so a clone without it shows
+# "metrics unavailable". Everything else under reports/ is intermediate and
+# regenerable with `make evaluate`.
+reports/*
+!reports/metrics/
+!reports/metrics/**
+
+# Demo runtime state
+demo/.last_run
+
+# Local agent tooling, not part of the product
+.claude/
+skills-lock.json

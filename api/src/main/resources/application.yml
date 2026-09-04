@@ -1,0 +1,94 @@
+spring:
+  application:
+    name: settleiq-api
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/settleiq}
+    username: ${DB_USER:settleiq}
+    password: ${DB_PASSWORD:settleiq}
+    hikari:
+      maximum-pool-size: ${DB_POOL_MAX:10}
+      minimum-idle: 2
+      connection-timeout: 5000
+      # A reconciliation run holds its connection for the whole run, so the
+      # pool must outlive the longest run rather than recycling underneath it.
+      max-lifetime: 1800000
+  flyway:
+    enabled: true
+    baseline-on-migrate: false
+    validate-on-migrate: true
+  jackson:
+    default-property-inclusion: non_null
+  servlet:
+    multipart:
+      # Bounded at the container edge as well as in CsvIngestService, so an
+      # oversized upload is refused before it is buffered rather than after.
+      max-file-size: ${UPLOAD_MAX_FILE_SIZE:64MB}
+      max-request-size: ${UPLOAD_MAX_REQUEST_SIZE:72MB}
+      file-size-threshold: 1MB
+  threads:
+    virtual:
+      enabled: true
+  lifecycle:
+    # Let an in-flight reconciliation finish before the process exits, so a
+    # rolling deploy cannot orphan a half-written run.
+    timeout-per-shutdown-phase: 45s
+
+server:
+  port: ${PORT:8080}
+  shutdown: graceful
+  error:
+    include-stacktrace: never
+  compression:
+    enabled: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: when-authorized
+  health:
+    livenessstate:
+      enabled: true
+    readinessstate:
+      enabled: true
+  metrics:
+    tags:
+      application: settleiq-api
+
+springdoc:
+  swagger-ui:
+    path: /docs
+
+settleiq:
+  worker-id: ${WORKER_ID:local}
+  worker-enabled: ${WORKER_ENABLED:true}
+  worker-poll-ms: ${WORKER_POLL_MS:5000}
+  stale-job-minutes: ${STALE_JOB_MINUTES:15}
+  model-path: ${MODEL_PATH:/app/model/model.json}
+  metrics-dir: ${METRICS_DIR:reports/metrics}
+  # Policy operating point. Validated on startup: a misconfigured auto-post
+  # limit is a money bug, so the service refuses to boot rather than run with one.
+  tolerance-paise: ${TOLERANCE_PAISE:100}
+  auto-post-min-confidence: ${AUTO_POST_MIN_CONFIDENCE:0.95}
+  auto-post-max-residue-paise: ${AUTO_POST_MAX_RESIDUE_PAISE:10000}
+  auto-post-max-residue-fraction: ${AUTO_POST_MAX_RESIDUE_FRACTION:0.001}
+  daily-auto-post-budget-paise: ${DAILY_AUTO_POST_BUDGET_PAISE:5000000}
+  daily-auto-post-count-budget: ${DAILY_AUTO_POST_COUNT_BUDGET:60}
+
+logging:
+  level:
+    root: INFO
+    com.settleiq: ${LOG_LEVEL:INFO}
+
+---
+spring:
+  config:
+    activate:
+      on-profile: local
+settleiq:
+  model-path: ${MODEL_PATH:mlservice/model.json}

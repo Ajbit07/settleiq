@@ -1,0 +1,52 @@
+# syntax=docker/dockerfile:1.7
+#
+# Multi-stage. The build stage carries Maven and the full dependency tree; the
+# runtime stage carries a JRE and the layered application only.
+
+# ---------------------------------------------------------------- build
+FROM maven:3.9-eclipse-temurin-21 AS build
+WORKDIR /build
+
+# Dependencies resolve in their own layer, keyed on the POMs alone. Editing
+# Java source then rebuilds in seconds instead of re-downloading Spring.
+COPY pom.xml .
+COPY engine/pom.xml engine/pom.xml
+COPY api/pom.xml api/pom.xml
+RUN --mount=type=cache,target=/root/.m2 \
+    mvn -B -q dependency:go-offline -DskipTests || true
+
+COPY engine/src engine/src
+COPY api/src api/src
+RUN --mount=type=cache,target=/root/.m2 \
+    mvn -B -DskipTests package
+
+# Spring Boot layered jars: dependencies change rarely, application classes
+# change every commit. Splitting them keeps image pushes small.
+RUN java -Djarmode=layertools -jar api/target/settleiq-api-*.jar extract --destination /layers
+
+# -------------------------------------------------------------- runtime
+FROM eclipse-temurin:21-jre-jammy AS runtime
+
+RUN groupadd --system --gid 10001 settleiq \
+ && useradd  --system --uid 10001 --gid settleiq --home /app settleiq \
+ && apt-get update && apt-get install -y --no-install-recommends curl \
+ && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+COPY --from=build --chown=settleiq:settleiq /layers/dependencies/         ./
+COPY --from=build --chown=settleiq:settleiq /layers/spring-boot-loader/   ./
+COPY --from=build --chown=settleiq:settleiq /layers/snapshot-dependencies/ ./
+COPY --from=build --chown=settleiq:settleiq /layers/application/          ./
+
+USER settleiq
+EXPOSE 8080
+
+# Container-aware heap. Without this the JVM sizes against host memory and gets
+# OOM-killed by the cgroup limit under load.
+ENV JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=70 -XX:+ExitOnOutOfMemoryError \
+-XX:+UseContainerSupport -Djava.security.egd=file:/dev/./urandom"
+
+HEALTHCHECK --interval=15s --timeout=5s --start-period=45s --retries=5 \
+  CMD curl -fsS http://localhost:8080/actuator/health/readiness || exit 1
+
+ENTRYPOINT ["java", "org.springframework.boot.loader.launch.JarLauncher"]

@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>com.settleiq</groupId>
+    <artifactId>settleiq-parent</artifactId>
+    <version>1.0.0</version>
+  </parent>
+
+  <artifactId>settleiq-api</artifactId>
+  <name>SettleIQ API</name>
+  <description>
+    Transport, persistence, scheduling and observability around the engine.
+    This module never performs money arithmetic; it hands longs of paise to the
+    engine and stores what comes back.
+  </description>
+
+  <dependencies>
+    <dependency>
+      <groupId>com.settleiq</groupId>
+      <artifactId>settleiq-engine</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-web</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-validation</artifactId>
+    </dependency>
+    <!-- JDBC, not JPA. Money is BIGINT paise and the SQL is explicit; an ORM
+         would add a mapping layer between us and numbers we care about. -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-jdbc</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.postgresql</groupId>
+      <artifactId>postgresql</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.flywaydb</groupId>
+      <artifactId>flyway-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.flywaydb</groupId>
+      <artifactId>flyway-database-postgresql</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-actuator</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.micrometer</groupId>
+      <artifactId>micrometer-registry-prometheus</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>net.logstash.logback</groupId>
+      <artifactId>logstash-logback-encoder</artifactId>
+      <version>8.0</version>
+    </dependency>
+    <dependency>
+      <groupId>org.springdoc</groupId>
+      <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+      <version>${springdoc.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-test</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <!-- Integration tests run against REAL Postgres 16 in a container, not an
+         in-memory substitute. The schema depends on Postgres-specific behaviour
+         (advisory locks, statement triggers, JSONB, SKIP LOCKED) and H2
+         would silently pass tests that production would fail. -->
+    <dependency>
+      <groupId>org.testcontainers</groupId>
+      <artifactId>postgresql</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.testcontainers</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <!-- *IT classes are integration tests: they need Docker and run at the
+           verify phase, so a plain `mvn test` stays fast and offline. -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-failsafe-plugin</artifactId>
+        <configuration>
+          <!-- spring-boot:repackage replaces the module artifact with a fat
+               jar whose classes live under BOOT-INF/. Failsafe defaults to
+               scanning the artifact, finds no @SpringBootConfiguration inside
+               it, and every test fails to build a context. Point it back at
+               the plain output directory. -->
+          <classesDirectory>${project.build.outputDirectory}</classesDirectory>
+          <!-- Forwarded into the forked test JVM. docker-java reads api.version
+               as a system property; the DOCKER_API_VERSION environment variable
+               and ~/.testcontainers.properties are both ignored on this path,
+               so this is the one place that actually takes effect. -->
+          <systemPropertyVariables>
+            <api.version>${api.version}</api.version>
+          </systemPropertyVariables>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-maven-plugin</artifactId>
+        <version>${spring-boot.version}</version>
+        <configuration>
+          <mainClass>com.settleiq.api.SettleIqApplication</mainClass>
+          <layers><enabled>true</enabled></layers>
+        </configuration>
+        <executions>
+          <execution><goals><goal>repackage</goal></goals></execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+</project>

@@ -1,0 +1,8 @@
+payment_id,order_id,amount,method,status,created_at_ist
+pay_x01,ord_x01,120.345,upi,captured,2025-12-22T11:00:00+05:30
+pay_x02,ord_x02,100.00,upi,captured
+pay_x03,ord_x03,100.00,upi,captured,not-a-timestamp
+,ord_x04,100.00,upi,captured,2025-12-22T11:00:00+05:30
+pay_x05,ord_x05,-50.00,upi,captured,2025-12-22T11:00:00+05:30
+pay_x06,ord_x06,250.00,upi,captured,2025-12-22T11:00:00+05:30
+pay_x07,ord_x07,175.50,card,captured,2025-12-22T11:00:00+05:30

@@ -1,0 +1,10 @@
+# Keep the build context small: everything the image needs is copied explicitly.
+.git
+tools/
+data/
+reports/
+**/target/
+__pycache__/
+*.pyc
+node_modules/
+.env

@@ -1,0 +1,47 @@
+{
+  "subsets": {
+    "amount": {
+      "features": 4,
+      "top1_correct": 20,
+      "top1_wrong": 4,
+      "top1_accuracy": 83.33,
+      "auc": 0.8088,
+      "decisions_changed_vs_amount": 0,
+      "changed_to_correct": 0,
+      "changed_to_wrong": 0
+    },
+    "amount+time": {
+      "features": 7,
+      "top1_correct": 20,
+      "top1_wrong": 4,
+      "top1_accuracy": 83.33,
+      "auc": 0.8088,
+      "decisions_changed_vs_amount": 0,
+      "changed_to_correct": 0,
+      "changed_to_wrong": 0
+    },
+    "amount+ident": {
+      "features": 11,
+      "top1_correct": 24,
+      "top1_wrong": 0,
+      "top1_accuracy": 100.0,
+      "auc": 1.0,
+      "decisions_changed_vs_amount": 4,
+      "changed_to_correct": 4,
+      "changed_to_wrong": 0
+    },
+    "full": {
+      "features": 16,
+      "top1_correct": 24,
+      "top1_wrong": 0,
+      "top1_accuracy": 100.0,
+      "auc": 1.0,
+      "decisions_changed_vs_amount": 4,
+      "changed_to_correct": 4,
+      "changed_to_wrong": 0
+    }
+  },
+  "verdict": "the full scorer changes 4 decision(s) against amount alone, 4 of them to the correct settlement, lifting top-1 accuracy 83.33% -> 100.00%.",
+  "contended_graphs": 59,
+  "held_out_credits": 24
+}

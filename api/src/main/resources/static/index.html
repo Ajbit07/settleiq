@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>SettleIQ — reconciliation control</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+
+<!-- Ambient field. Two very soft radial washes and a hairline grid, all under
+     4% opacity: the surface should feel lit rather than look gradient. -->
+<div class="ambient" aria-hidden="true"></div>
+
+<!-- Lucide, one 24x24 viewBox, stroked with currentColor so an icon recolours
+     with its container and never needs a per-state variant. -->
+<svg class="sprite" aria-hidden="true" focusable="false">
+  <symbol id="i-scale" viewBox="0 0 24 24">
+    <path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/>
+    <path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/>
+    <path d="M7 21h10"/><path d="M12 3v18"/>
+    <path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"/>
+  </symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24">
+    <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/>
+    <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 21v-5h5"/>
+  </symbol>
+  <symbol id="i-shield-check" viewBox="0 0 24 24">
+    <path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/>
+    <path d="m9 12 2 2 4-4"/>
+  </symbol>
+  <symbol id="i-shield-alert" viewBox="0 0 24 24">
+    <path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/>
+    <path d="M12 8v4"/><path d="M12 16h.01"/>
+  </symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+  <symbol id="i-chevron" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol>
+  <symbol id="i-down" viewBox="0 0 24 24"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24">
+    <rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+  </symbol>
+  <symbol id="i-unlock" viewBox="0 0 24 24">
+    <rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/>
+  </symbol>
+  <symbol id="i-upload" viewBox="0 0 24 24">
+    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5-5 5 5"/><path d="M12 5v12"/>
+  </symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24">
+    <path d="m21.7 18-8-14a2 2 0 0 0-3.4 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.7-3Z"/>
+    <path d="M12 9v4"/><path d="M12 17h.01"/>
+  </symbol>
+  <symbol id="i-ledger" viewBox="0 0 24 24">
+    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+    <path d="M9 7h7M9 11h5"/>
+  </symbol>
+  <symbol id="i-flag" viewBox="0 0 24 24">
+    <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><path d="M4 22v-7"/>
+  </symbol>
+  <symbol id="i-link" viewBox="0 0 24 24">
+    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+  </symbol>
+  <symbol id="i-gauge" viewBox="0 0 24 24"><path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/></symbol>
+  <symbol id="i-card" viewBox="0 0 24 24">
+    <rect width="20" height="14" x="2" y="5" rx="2"/><path d="M2 10h20"/>
+  </symbol>
+  <symbol id="i-bank" viewBox="0 0 24 24">
+    <path d="M3 21h18"/><path d="M5 21V10M9 21V10M15 21V10M19 21V10"/><path d="m12 3 9 5H3z"/>
+  </symbol>
+  <symbol id="i-receipt" viewBox="0 0 24 24">
+    <path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/>
+    <path d="M8 8h8M8 12h6"/>
+  </symbol>
+  <symbol id="i-split" viewBox="0 0 24 24">
+    <path d="M16 3h5v5"/><path d="M8 3H3v5"/><path d="M12 22V8"/><path d="m3 8 9 6 9-6"/>
+  </symbol>
+  <symbol id="i-gavel" viewBox="0 0 24 24">
+    <path d="m14 13-8.5 8.5a2.12 2.12 0 1 1-3-3L11 10"/>
+    <path d="m16 16 6-6"/><path d="m8 8 6-6"/><path d="m9 7 8 8"/><path d="m21 11-8-8"/>
+  </symbol>
+</svg>
+
+<a class="skip" href="#work">Skip to content</a>
+
+<!-- COMMAND STRIP — glass. Who, which run, and the two states an operator must
+     be able to read without clicking: ledger integrity and deployment posture. -->
+<header class="strip">
+  <div class="ident">
+    <svg class="ico mark" aria-hidden="true"><use href="#i-scale"/></svg>
+    <span class="wordmark">Settle<b>IQ</b></span>
+  </div>
+
+  <div class="ctx">
+    <label class="ctl"><span>Merchant</span><select id="merchant"></select></label>
+    <label class="ctl"><span>Run</span><select id="run"></select></label>
+  </div>
+
+  <div class="lamps">
+    <div class="lamp" id="chainPill" aria-live="polite">
+      <svg class="ico sm" aria-hidden="true"><use href="#i-shield-check"/></svg>
+      <span class="k">Ledger</span><span class="v txt">—</span>
+    </div>
+    <button type="button" class="lamp" id="deployPill"
+            aria-label="Deployment posture, and the API key held in this browser">
+      <svg class="ico sm" aria-hidden="true"><use href="#i-lock"/></svg>
+      <span class="k">Posture</span><span class="v txt">checking</span>
+    </button>
+  </div>
+
+  <button class="btn primary" id="runBtn" type="button">
+    <svg class="ico" aria-hidden="true"><use href="#i-refresh"/></svg>
+    <span class="t">Reconcile</span>
+  </button>
+</header>
+
+<div class="shell">
+  <nav class="rail" role="tablist" aria-label="Views">
+    <button role="tab" id="tab-overview" data-t="overview" aria-controls="work" aria-selected="true">
+      <svg class="ico" aria-hidden="true"><use href="#i-gauge"/></svg><span>Overview</span></button>
+    <button role="tab" id="tab-recon" data-t="recon" aria-controls="work" aria-selected="false" tabindex="-1">
+      <svg class="ico" aria-hidden="true"><use href="#i-split"/></svg><span>Reconciliation</span></button>
+    <button role="tab" id="tab-exceptions" data-t="exceptions" aria-controls="work" aria-selected="false" tabindex="-1">
+      <svg class="ico" aria-hidden="true"><use href="#i-flag"/></svg><span>Exceptions</span>
+      <span class="count" id="excCount" hidden></span></button>
+    <button role="tab" id="tab-ledger" data-t="ledger" aria-controls="work" aria-selected="false" tabindex="-1">
+      <svg class="ico" aria-hidden="true"><use href="#i-ledger"/></svg><span>Ledger</span></button>
+    <button role="tab" id="tab-audit" data-t="audit" aria-controls="work" aria-selected="false" tabindex="-1">
+      <svg class="ico" aria-hidden="true"><use href="#i-link"/></svg><span>Audit</span></button>
+    <button role="tab" id="tab-ingest" data-t="ingest" aria-controls="work" aria-selected="false" tabindex="-1">
+      <svg class="ico" aria-hidden="true"><use href="#i-upload"/></svg><span>Ingest</span></button>
+    <button role="tab" id="tab-metrics" data-t="metrics" aria-controls="work" aria-selected="false" tabindex="-1">
+      <svg class="ico" aria-hidden="true"><use href="#i-receipt"/></svg><span>Metrics</span></button>
+    <p class="creed">Don't automate the guess.<br><b>Automate the proof.</b></p>
+  </nav>
+
+  <main id="work" role="tabpanel" tabindex="-1" aria-labelledby="tab-overview"></main>
+</div>
+
+<div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+
+<script src="app.js" type="module"></script>
+</body>
+</html>

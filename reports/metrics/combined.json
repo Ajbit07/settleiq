@@ -1,0 +1,264 @@
+{
+  "generated": "2026-09-04T13:53:53",
+  "unsafe_auto_posts": 0,
+  "totals": {
+    "auto_posted": 10,
+    "escalated": 210
+  },
+  "datasets": {
+    "baseline": {
+      "preset": "full",
+      "model_version": "settleiq-pairscorer-1.0.0",
+      "wall_ms": 770,
+      "payments": 5012,
+      "settlements": 86,
+      "bank_rows": 211,
+      "bank_matched": 86,
+      "exact_matches": 44,
+      "candidate_pairs": 122,
+      "payment_links": 4781,
+      "ambiguous_payments": 48,
+      "exceptions": 78,
+      "residue_net_paise": -114885,
+      "residue_abs_paise": 2396237,
+      "gross_matched_paise": 623185354,
+      "auto_posted": 10,
+      "escalated": 68,
+      "suppressed_duplicate": 0,
+      "audit_rows": 78,
+      "audit_head": "a03ba5c1cdef2b1cbfd335c33273ca43f94a15a6306113f547adc3859f041425",
+      "h1_dates": 25,
+      "h2_batches": 0,
+      "failed_dates": 0,
+      "unassigned_payments": 0,
+      "timings": {
+        "stage0_normalise": 20,
+        "stage1_4_match": 51,
+        "stage5_netting": 59,
+        "stage6_decompose": 35,
+        "stage6b_agent_policy": 387
+      },
+      "_wall_ms": 1394,
+      "_types": {
+        "unexplained": 8,
+        "fee_variance": 18,
+        "netted_refund": 1,
+        "attribution_ambiguous": 18,
+        "ambiguous_candidates": 33
+      },
+      "_verdicts": {
+        "ESCALATE": 68,
+        "AUTO_POST": 10
+      },
+      "_agent_steps": 555,
+      "_multi_step": 78,
+      "_attribution": "refused=18 value=19,024.78 basis={timestamp_in_inferred_gap=18}",
+      "_llm_status": "disabled: SETTLEIQ_LLM_PROVIDER=off",
+      "_llm": "investigations_with_llm=0/78 calls=0 multi_step=0 model=null"
+    },
+    "ood": {
+      "preset": "full",
+      "model_version": "settleiq-pairscorer-1.0.0",
+      "wall_ms": 603,
+      "payments": 1806,
+      "settlements": 43,
+      "bank_rows": 87,
+      "bank_matched": 42,
+      "exact_matches": 21,
+      "candidate_pairs": 12,
+      "payment_links": 1669,
+      "ambiguous_payments": 9,
+      "exceptions": 16,
+      "residue_net_paise": -26958848,
+      "residue_abs_paise": 27466250,
+      "gross_matched_paise": 8057329410,
+      "auto_posted": 0,
+      "escalated": 16,
+      "suppressed_duplicate": 0,
+      "audit_rows": 16,
+      "audit_head": "51a61179b21747710182c0a582a3b729635da9d79ea7e506c3fc492072e6b083",
+      "h1_dates": 23,
+      "h2_batches": 0,
+      "failed_dates": 0,
+      "unassigned_payments": 0,
+      "timings": {
+        "stage0_normalise": 16,
+        "stage1_4_match": 37,
+        "stage5_netting": 39,
+        "stage6_decompose": 19,
+        "stage6b_agent_policy": 307
+      },
+      "_wall_ms": 1211,
+      "_types": {
+        "unexplained": 1,
+        "duplicate_credit": 1,
+        "fee_variance": 2,
+        "reserve_movement": 1,
+        "attribution_ambiguous": 5,
+        "ambiguous_candidates": 6
+      },
+      "_verdicts": {
+        "ESCALATE": 16
+      },
+      "_agent_steps": 112,
+      "_multi_step": 16,
+      "_attribution": "refused=5 value=3,81,098.97 basis={timestamp_in_inferred_gap=5}",
+      "_llm_status": "disabled: SETTLEIQ_LLM_PROVIDER=off",
+      "_llm": "investigations_with_llm=0/16 calls=0 multi_step=0 model=null"
+    },
+    "adversarial": {
+      "preset": "full",
+      "model_version": "settleiq-pairscorer-1.0.0",
+      "wall_ms": 608,
+      "payments": 240,
+      "settlements": 120,
+      "bank_rows": 60,
+      "bank_matched": 60,
+      "exact_matches": 0,
+      "candidate_pairs": 150,
+      "payment_links": 160,
+      "ambiguous_payments": 0,
+      "exceptions": 120,
+      "residue_net_paise": -2798924300,
+      "residue_abs_paise": 2798928300,
+      "gross_matched_paise": 5597850600,
+      "auto_posted": 0,
+      "escalated": 120,
+      "suppressed_duplicate": 0,
+      "audit_rows": 120,
+      "audit_head": "dbc3510d3b7469708fb927c40c52923ccf13da382f39142c80cf83bbd6fb64db",
+      "h1_dates": 40,
+      "h2_batches": 0,
+      "failed_dates": 20,
+      "unassigned_payments": 80,
+      "timings": {
+        "stage0_normalise": 14,
+        "stage1_4_match": 81,
+        "stage5_netting": 59,
+        "stage6_decompose": 12,
+        "stage6b_agent_policy": 357
+      },
+      "_wall_ms": 1230,
+      "_types": {
+        "partition_unproven": 40,
+        "duplicate_credit": 40,
+        "ambiguous_candidates": 40
+      },
+      "_verdicts": {
+        "ESCALATE": 120
+      },
+      "_agent_steps": 840,
+      "_multi_step": 120,
+      "_solver": "{AMBIGUOUS_MULTIPLE_PARTITIONS=20, NO_EXACT_SUBSET=20}",
+      "_llm_status": "disabled: SETTLEIQ_LLM_PROVIDER=off",
+      "_llm": "investigations_with_llm=0/120 calls=0 multi_step=0 model=null"
+    },
+    "hard_netting": {
+      "preset": "full",
+      "model_version": "settleiq-pairscorer-1.0.0",
+      "wall_ms": 420,
+      "payments": 413,
+      "settlements": 8,
+      "bank_rows": 8,
+      "bank_matched": 8,
+      "exact_matches": 8,
+      "candidate_pairs": 0,
+      "payment_links": 4,
+      "ambiguous_payments": 0,
+      "exceptions": 6,
+      "residue_net_paise": 0,
+      "residue_abs_paise": 0,
+      "gross_matched_paise": 541100,
+      "auto_posted": 0,
+      "escalated": 6,
+      "suppressed_duplicate": 0,
+      "audit_rows": 6,
+      "audit_head": "826eabd43e45c08de2a38fb47f03bcc6c61ffe9011cf0631caf056d2457f4a24",
+      "h1_dates": 0,
+      "h2_batches": 2,
+      "failed_dates": 3,
+      "unassigned_payments": 409,
+      "timings": {
+        "stage0_normalise": 10,
+        "stage1_4_match": 2,
+        "stage5_netting": 78,
+        "stage6_decompose": 7,
+        "stage6b_agent_policy": 232
+      },
+      "_wall_ms": 523,
+      "_types": {
+        "partition_unproven": 6
+      },
+      "_verdicts": {
+        "ESCALATE": 6
+      },
+      "_agent_steps": 36,
+      "_multi_step": 6,
+      "_solver": "{UNIQUE=2, AMBIGUOUS_MULTIPLE_PARTITIONS=2, NO_EXACT_SUBSET=2, BOUND_ITEMS=2}",
+      "_llm_status": "disabled: SETTLEIQ_LLM_PROVIDER=off",
+      "_llm": "investigations_with_llm=0/6 calls=0 multi_step=0 model=null"
+    }
+  },
+  "ml_ablation": {
+    "subsets": {
+      "amount": {
+        "features": 4,
+        "top1_correct": 20,
+        "top1_wrong": 4,
+        "top1_accuracy": 83.33,
+        "auc": 0.8088,
+        "decisions_changed_vs_amount": 0,
+        "changed_to_correct": 0,
+        "changed_to_wrong": 0
+      },
+      "amount+time": {
+        "features": 7,
+        "top1_correct": 20,
+        "top1_wrong": 4,
+        "top1_accuracy": 83.33,
+        "auc": 0.8088,
+        "decisions_changed_vs_amount": 0,
+        "changed_to_correct": 0,
+        "changed_to_wrong": 0
+      },
+      "amount+ident": {
+        "features": 11,
+        "top1_correct": 24,
+        "top1_wrong": 0,
+        "top1_accuracy": 100.0,
+        "auc": 1.0,
+        "decisions_changed_vs_amount": 4,
+        "changed_to_correct": 4,
+        "changed_to_wrong": 0
+      },
+      "full": {
+        "features": 16,
+        "top1_correct": 24,
+        "top1_wrong": 0,
+        "top1_accuracy": 100.0,
+        "auc": 1.0,
+        "decisions_changed_vs_amount": 4,
+        "changed_to_correct": 4,
+        "changed_to_wrong": 0
+      }
+    },
+    "verdict": "the full scorer changes 4 decision(s) against amount alone, 4 of them to the correct settlement, lifting top-1 accuracy 83.33% -> 100.00%.",
+    "contended_graphs": 59,
+    "held_out_credits": 24
+  },
+  "llm_proof": {
+    "lines": [
+      "llm status configured: ollama phi4-mini:latest at http://localhost:11434",
+      "llm_used true",
+      "llm_model phi4-mini:latest",
+      "llm_calls 6",
+      "tools_chosen_by_llm [get_bank_candidates, get_payments_in_batch, get_chargebacks, get_refunds, get_settlement, get_reserve_movements]",
+      "classification fee_variance",
+      "policy verdict ESCALATE",
+      "classification fee_variance"
+    ],
+    "exit": 0,
+    "raw": "============================================================================\n  REAL LLM INVESTIGATION \u2014 PROOF\n============================================================================\nmerchant        data/merchant_a\nprovider        ollama\nendpoint        http://localhost:11434\nmodel           phi4-mini:latest\nllm status      configured: ollama phi4-mini:latest at http://localhost:11434\n\nexception       setl_A7K2QX_0074\nresidue         -341.41 (computed by the engine, before any model ran)\nbatch value     86,995.78\n\n--- investigation ------------------------------------------------------\nllm_used            true\nllm_model           phi4-mini:latest\nllm_provider        ollama\nllm_calls           6\ntools_chosen_by_llm [get_bank_candidates, get_payments_in_batch, get_chargebacks, get_refunds, get_settlement, get_reserve_movements]\ntool_calls          9 (hard cap 6)\nduration            8619 ms\n\n--- what the model chose, step by step ---------------------------------\n  1. get_bank_candidates      chosen_by=llm:phi4-mini:latest facts=2\n      reason: To verify the bank-linked transactions and reconcile the batch value with the bank's records.\n  2. get_payments_in_batch    chosen_by=llm:phi4-mini:latest facts=2\n      reason: To confirm the transactions linked to the bank account and reconcile the batch value with the residue.\n  3. get_chargebacks          chosen_by=llm:phi4-mini:latest facts=1\n      reason: Investigate potential chargebacks related to the batch to understand discrepancies.\n  4. get_refunds              chosen_by=llm:phi4-mini:latest facts=2\n      reason: To determine if there are any refunds that could explain the residue.\n  5. get_settlement           chosen_by=llm:phi4-mini:latest facts=2\n      reason: To understand the current status of the batch and identify any pending settlements that could explain the residue.\n  6. get_reserve_movements    chosen_by=llm:phi4-mini:latest facts=1\n      reason: To understand the movement of funds that could explain the residue.\n  7. check_swap_invariance    chosen_by=engine:mandatory   facts=0\n      reason: the classifier can act on this lookup and the planner did not reach it\n  8. check_duplicate_credit   chosen_by=engine:mandatory   facts=0\n      reason: the classifier can act on this lookup and the planner did not reach it\n  9. check_rate_card          chosen_by=engine:mandatory   facts=2\n      reason: the classifier can act on this lookup and the planner did not reach it\n\n--- evidence the chosen tools returned, from real rows ------------------\n  [bank_txn:bnk_000000000076] closest bank credit in the window is 79,811.72 on 2025-11-29, delta 0.00\n  [settlement:setl_A7K2QX_0074] 29 bank credits fall inside the \u00b13 banking-day window\n  [settlement:setl_A7K2QX_0074] batch reconstructed from 68 payments, gross 86,995.78\n  [payment:pay_00000000001484] card volume in this batch 28,564.72\n  [chargeback:disp_000000000008] chargeback 201.09 plus fee 300.00\n  [refund:rfnd_000000000086] refund 540.00 netted into this payout\n  [refund:rfnd_000000000268] refund 254.25 netted into this payout\n  [settlement:setl_A7K2QX_0074] settlement reports net 79,811.72 on 2025-11-29\n  [settlement:setl_A7K2QX_0074] settlement gross 86,995.78, fees 853.78, gst 153.72\n  [reserve:rsrv_A7K2QX_0003] reserve 5,277.32 held 2025-08-31 released 2025-11-29\n  [rate_card:merchant_1] published card rate in force is 2.00% from 2025-11-01\n  [settlement:setl_A7K2QX_0074] residue implies an effective rate 1.1952% above the published card rate\n\n--- deterministic half (the model had no part in this) ------------------\nclassification      fee_variance\nresidue (paise)     -34141   <- computed in stage 6, not by the model\npolicy verdict      ESCALATE\npolicy reason       held for human review: residue 341.41 exceeds both Rs 100.00 and 0.1% of batch value 86995.78\nidempotency key     36ba6dcf8baa6ea5e9d6d9b3e38eee2a\n\n--- deterministic planner, same exception, for comparison ---------------\nclassification      fee_variance\ntool_calls          8\ntools               [get_settlement, compare_records, check_rate_card, check_swap_invariance, check_duplicate_credit, get_refunds, get_chargebacks, get_reserve_movements]\n\n--- what this run actually shows ----------------------------------------\n  the model made 6 real calls and selected 6 tools by itself\n  it reached the SAME classification as the deterministic planner\n\n  The model selected the reading order. The money was decided by\n  arithmetic and policy that never saw its output.\n"
+  },
+  "note": "engine runs are executed with the LLM planner disabled so the measurement is reproducible; the LLM is evidenced separately by LlmProof on one real exception"
+}

@@ -1,0 +1,69 @@
+{
+  "split": "dev",
+  "operating_point": 0.95,
+  "points": [
+    {
+      "threshold": 0.5,
+      "coverage": 100.0,
+      "precision": 100.0,
+      "auto_posted": 16,
+      "false_matches": 0
+    },
+    {
+      "threshold": 0.6,
+      "coverage": 100.0,
+      "precision": 100.0,
+      "auto_posted": 16,
+      "false_matches": 0
+    },
+    {
+      "threshold": 0.7,
+      "coverage": 100.0,
+      "precision": 100.0,
+      "auto_posted": 16,
+      "false_matches": 0
+    },
+    {
+      "threshold": 0.8,
+      "coverage": 100.0,
+      "precision": 100.0,
+      "auto_posted": 16,
+      "false_matches": 0
+    },
+    {
+      "threshold": 0.85,
+      "coverage": 100.0,
+      "precision": 100.0,
+      "auto_posted": 16,
+      "false_matches": 0
+    },
+    {
+      "threshold": 0.9,
+      "coverage": 100.0,
+      "precision": 100.0,
+      "auto_posted": 16,
+      "false_matches": 0
+    },
+    {
+      "threshold": 0.95,
+      "coverage": 62.5,
+      "precision": 100.0,
+      "auto_posted": 10,
+      "false_matches": 0
+    },
+    {
+      "threshold": 0.97,
+      "coverage": 62.5,
+      "precision": 100.0,
+      "auto_posted": 10,
+      "false_matches": 0
+    },
+    {
+      "threshold": 0.99,
+      "coverage": 62.5,
+      "precision": 100.0,
+      "auto_posted": 10,
+      "false_matches": 0
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+payment_id_a,payment_id_b,settlement_id_a,settlement_id_b,amount,method,capture_date_ist,reason
+pay_00000000004601,pay_00000000004602,setl_T2RNGB_0040,setl_T2RNGB_0041,909.29,upi,2025-11-15,identical amount+method+timestamp split across consecutive cycles; swap-invariant in gross and in fee
+pay_00000000004603,pay_00000000004604,setl_T2RNGB_0009,setl_T2RNGB_0010,281.79,upi,2025-11-04,identical amount+method+timestamp split across consecutive cycles; swap-invariant in gross and in fee
+pay_00000000004605,pay_00000000004606,setl_T2RNGB_0021,setl_T2RNGB_0022,209.00,upi,2025-11-08,identical amount+method+timestamp split across consecutive cycles; swap-invariant in gross and in fee
+pay_00000000004607,pay_00000000004608,setl_T2RNGB_0057,setl_T2RNGB_0058,641.17,card,2025-11-21,identical amount+method+timestamp split across consecutive cycles; swap-invariant in gross and in fee
+pay_00000000004609,pay_00000000004610,setl_T2RNGB_0015,setl_T2RNGB_0016,502.00,card,2025-11-05,identical amount+method+timestamp split across consecutive cycles; swap-invariant in gross and in fee
+pay_00000000004611,pay_00000000004612,setl_T2RNGB_0007,setl_T2RNGB_0008,1056.00,card,2025-11-03,identical amount+method+timestamp split across consecutive cycles; swap-invariant in gross and in fee

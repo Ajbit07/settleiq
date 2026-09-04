@@ -1,0 +1,12 @@
+setl_DEMO_0001	no exception	residue 0 - PROVED
+setl_DEMO_0002	fee_variance	residue -250.00 on 100,000.00 card volume
+setl_DEMO_0003	netted_refund	residue -3,000.00 = refund rfnd_d01
+setl_DEMO_0004	chargeback_debit	residue -2,300.00 = disp_d01 amount + fee
+setl_DEMO_0005	ambiguous_candidates	residue 0 and still held - pay_d08 / pay_d10 are swap-invariant
+setl_DEMO_0006	ambiguous_candidates	residue 0 and still held - pay_d08 / pay_d10 are swap-invariant
+setl_DEMO_0007	unexplained	residue -450.00, no source document
+setl_DEMO_0008	reserve_movement	residue -5,000.00 = rsv_d01
+setl_DEMO_0009	fee_variance	residue -60.00 - passes every gate, auto-posted
+setl_DEMO_0010	duplicate_credit	no bank credit links to this settlement
+setl_DEMO_0011	partition_unproven	reported gross exceeds available captures
+setl_DEMO_0013	unexplained	matched by the scorer, not by a reference - confidence below 1.00

@@ -1,0 +1,168 @@
+# `docker compose up` brings up Postgres, migrates the schema, seeds the
+# generated merchant data and serves the API. There is no manual step.
+#
+# Ordering is enforced by conditions, not by sleeps:
+#   postgres healthy -> seed runs to completion -> api starts
+
+name: settleiq
+
+x-postgres-env: &postgres-env
+  POSTGRES_DB: ${POSTGRES_DB:-settleiq}
+  POSTGRES_USER: ${POSTGRES_USER:-settleiq}
+  POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-settleiq}
+
+x-db-env: &db-env
+  DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-settleiq}
+  DB_USER: ${POSTGRES_USER:-settleiq}
+  DB_PASSWORD: ${POSTGRES_PASSWORD:-settleiq}
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      <<: *postgres-env
+      # Deterministic money formatting and sort order regardless of host locale.
+      LANG: C.UTF-8
+    command:
+      - postgres
+      - -c
+      - max_connections=100
+      - -c
+      - shared_buffers=256MB
+      # Advisory locks are the job-claiming primitive; give them room.
+      - -c
+      - max_locks_per_transaction=256
+      - -c
+      - log_min_duration_statement=500
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      # -d and -U matter: the default pg_isready probe passes before the
+      # application database exists, and the API then fails its first migration.
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-settleiq} -d ${POSTGRES_DB:-settleiq}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 10s
+    restart: unless-stopped
+
+  # One-shot: migrate the schema and load the generated merchant data, then exit.
+  # Runs to completion before the API starts, so the API never serves an
+  # half-migrated database.
+  seed:
+    build:
+      context: .
+      dockerfile: ops/Dockerfile.api
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      <<: *db-env
+      SPRING_PROFILES_ACTIVE: docker
+      WORKER_ENABLED: "false"
+      MODEL_PATH: /app/model/model.json
+    volumes:
+      - ./data:/data:ro
+      - ./mlservice:/app/model:ro
+    command:
+      # No HTTP listener for a job that loads CSVs and exits.
+      - --spring.main.web-application-type=none
+      - --ingest=/data/merchant_a
+      - --ingest=/data/merchant_b_ood
+      - --ingest-then-exit
+    # The image healthcheck curls the HTTP port, which this one-shot never
+    # opens. Left enabled it sits in "health: starting" until it exits, which
+    # reads like a hang. Completion is what matters here, not liveness.
+    healthcheck:
+      disable: true
+    restart: "no"
+
+  api:
+    build:
+      context: .
+      dockerfile: ops/Dockerfile.api
+    depends_on:
+      postgres:
+        condition: service_healthy
+      seed:
+        condition: service_completed_successfully
+    environment:
+      <<: *db-env
+      SPRING_PROFILES_ACTIVE: docker
+      PORT: 8080
+      WORKER_ENABLED: "true"
+      WORKER_ID: api-1
+      MODEL_PATH: /app/model/model.json
+      METRICS_DIR: /app/reports/metrics
+      LOG_LEVEL: INFO
+      # Auth is OFF unless keys are supplied, so the offline demo needs no
+      # setup -- and /api/v1/auth/status reports "open" rather than implying
+      # a protection that is not there. Format: key:merchant,merchant|key2:*
+      SETTLEIQ_API_KEYS: ${SETTLEIQ_API_KEYS:-}
+      SETTLEIQ_RATE_LIMIT_PER_MIN: ${SETTLEIQ_RATE_LIMIT_PER_MIN:-600}
+      # The agent's optional LLM planner. Unreachable or unset = deterministic
+      # planner, reported as such in every trace. Never a source of financial
+      # truth: it picks one identifier from a closed list and nothing else.
+      #
+      # Default target is Ollama on the HOST. Inside a container "localhost" is
+      # the container itself, so the host gateway alias below is what makes a
+      # locally-run model reachable at all.
+      SETTLEIQ_LLM_PROVIDER: ${SETTLEIQ_LLM_PROVIDER:-ollama}
+      SETTLEIQ_LLM_BASE_URL: ${SETTLEIQ_LLM_BASE_URL:-http://host.docker.internal:11434}
+      SETTLEIQ_LLM_MODEL: ${SETTLEIQ_LLM_MODEL:-phi4-mini:latest}
+      SETTLEIQ_LLM_TIMEOUT_MS: ${SETTLEIQ_LLM_TIMEOUT_MS:-90000}
+      # Planner calls per run. A local model answers in ~1.5 s and merchant A
+      # raises 78 exceptions, so an unbounded planner does not finish. The first
+      # few investigations get the model; the rest use the deterministic planner
+      # and each trace records which it was.
+      SETTLEIQ_LLM_MAX_CALLS: ${SETTLEIQ_LLM_MAX_CALLS:-72}
+      SETTLEIQ_LLM_API_KEY: ${SETTLEIQ_LLM_API_KEY:-}
+    ports:
+      - "${API_PORT:-8080}:8080"
+    # Lets the container reach a model server running on the host. Docker
+    # Desktop provides this alias natively; the mapping is spelled out so it
+    # also works on plain Linux docker, where it is not automatic.
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ./mlservice:/app/model:ro
+      # Evaluation artifacts, read-only. Produced offline by `make evaluate`
+      # against the hidden ground truth; the service can display them but can
+      # never consult the answers while reconciling.
+      - ./reports/metrics:/app/reports/metrics:ro
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/actuator/health/readiness || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 45s
+    deploy:
+      resources:
+        limits:
+          memory: 1g
+    restart: unless-stopped
+
+  ml:
+    build:
+      context: .
+      dockerfile: ops/Dockerfile.ml
+    environment:
+      MODEL_PATH: /app/model/model.json
+    ports:
+      # The container port must match what uvicorn actually binds (8000, see
+      # ops/Dockerfile.ml). Publishing to a different container port produces a
+      # service that passes its own healthcheck -- which curls localhost:8000
+      # from INSIDE -- while being unreachable from the host.
+      - "${ML_PORT:-8000}:8000"
+    volumes:
+      - ./mlservice:/app/model:ro
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8000/health/ready || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    restart: unless-stopped
+
+volumes:
+  pgdata:

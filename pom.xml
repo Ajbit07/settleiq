@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>com.settleiq</groupId>
+  <artifactId>settleiq-parent</artifactId>
+  <version>1.0.0</version>
+  <packaging>pom</packaging>
+  <name>SettleIQ</name>
+  <description>Payout decomposition and reconciliation engine</description>
+
+  <!--
+    Two modules, deliberately:
+
+      engine  pure Java 21, ZERO runtime dependencies. All money maths, matching,
+              netting, policy and audit logic lives here. It compiles with plain
+              javac, which keeps the core auditable and makes it impossible for a
+              framework upgrade to change an arithmetic result.
+
+      api     Spring Boot. Transport, persistence, scheduling, observability.
+              It orchestrates the engine; it never does money maths.
+
+    The dependency arrow only ever points api -> engine.
+  -->
+  <modules>
+    <module>engine</module>
+    <module>api</module>
+  </modules>
+
+  <properties>
+    <!-- Docker API version the integration tests ask the daemon to speak.
+         docker-java (via Testcontainers 1.20.4) defaults to 1.32, which Docker
+         Engine 25+ refuses: it answers /info with HTTP 400 and a stub body, and
+         Testcontainers reports that as "Could not find a valid Docker
+         environment", which sends you hunting for a daemon that is in fact
+         running fine. 1.41 has been supported since Docker 20.10 (2020) and is
+         above the 1.40 minimum of current engines. Override if ever needed:
+           ./mvnw verify -Dapi.version=1.44                                   -->
+    <api.version>1.41</api.version>
+    <java.version>21</java.version>
+    <maven.compiler.release>21</maven.compiler.release>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <spring-boot.version>3.3.5</spring-boot.version>
+    <springdoc.version>2.6.0</springdoc.version>
+    <testcontainers.version>1.20.4</testcontainers.version>
+  </properties>
+
+  <dependencyManagement>
+    <dependencies>
+      <!-- Testcontainers is pinned AHEAD of the Spring Boot BOM on purpose.
+           The version Spring Boot 3.3.5 manages (1.19.8) ships a docker-java
+           that negotiates an API version Docker Engine 29.x rejects with HTTP
+           400, so tests fail to find a Docker environment that is demonstrably
+           running. Import order matters: the first BOM to declare a version
+           wins, so this block must stay above spring-boot-dependencies. -->
+      <dependency>
+        <groupId>org.testcontainers</groupId>
+        <artifactId>testcontainers-bom</artifactId>
+        <version>${testcontainers.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-dependencies</artifactId>
+        <version>${spring-boot.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+      <dependency>
+        <groupId>com.settleiq</groupId>
+        <artifactId>settleiq-engine</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
+  <build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-compiler-plugin</artifactId>
+          <version>3.13.0</version>
+          <configuration>
+            <release>${java.version}</release>
+            <!-- Retain parameter names in the bytecode.
+                 spring-boot-starter-parent sets this for you; we import the BOM
+                 instead (to keep our own parent), so it has to be set here.
+                 Without it Spring cannot infer @RequestParam names and every
+                 query-parameter endpoint fails at RUNTIME with HTTP 400 while
+                 compiling and unit-testing perfectly. -->
+            <parameters>true</parameters>
+            <compilerArgs>
+              <arg>-Xlint:all,-serial,-processing</arg>
+            </compilerArgs>
+          </configuration>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-surefire-plugin</artifactId>
+          <version>3.5.1</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-failsafe-plugin</artifactId>
+          <version>3.5.1</version>
+          <executions>
+            <execution>
+              <goals>
+                <goal>integration-test</goal>
+                <goal>verify</goal>
+              </goals>
+            </execution>
+          </executions>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+  </build>
+</project>

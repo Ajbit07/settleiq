@@ -1,0 +1,45 @@
+{
+  "merchant_id": "merchant_1",
+  "name": "Kirana Direct Retail Pvt Ltd",
+  "gst_rate_pct": "18.0",
+  "tds_rate_pct": "1.0",
+  "reserve_rate_pct": "5.0",
+  "reserve_methods": [
+    "card",
+    "wallet"
+  ],
+  "reserve_hold_days": 90,
+  "instant_surcharge_pct": "0.25",
+  "dispute_fee": "300.00",
+  "tolerance_paise": 100,
+  "methods": {
+    "upi": [
+      {
+        "effective_from": "2025-11-01",
+        "pct": "0.00",
+        "flat_paise": 0
+      }
+    ],
+    "card": [
+      {
+        "effective_from": "2025-11-01",
+        "pct": "2.00",
+        "flat_paise": 0
+      }
+    ],
+    "netbanking": [
+      {
+        "effective_from": "2025-11-01",
+        "pct": "0.00",
+        "flat_paise": 1500
+      }
+    ],
+    "wallet": [
+      {
+        "effective_from": "2025-11-01",
+        "pct": "1.80",
+        "flat_paise": 0
+      }
+    ]
+  }
+}
