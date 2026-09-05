@@ -122,11 +122,19 @@ Measured contribution (86 credits, held-out ground truth):
 | + UTR repair | 75/86 | 15.85% |
 | + pair scorer | **86/86** | **7.30%** |
 | + global assignment | 86/86 | 7.30% |
-| + netting | 86/86 | **0.09%** |
+| + netting | 86/86 | **0.38%** |
 
 Global assignment shows no gain on this dataset — after exact and repaired
 matching, every remaining credit has one viable partner, so greedy and Hungarian
 agree. Reported rather than hidden.
+
+The final 0.38% is higher than it once was, deliberately. Adjustments used to be
+placed into a batch by interpolating a boundary when no batch clearly bracketed
+their timestamp — a guess that leaves both payouts balancing and goes unnoticed
+for weeks. Attribution now refuses unless exactly one batch's observed members
+bracket the timestamp, which refuses 18 of 250 adjustments on `merchant_1` and
+moves ₹19,024.78 out of "silently netted" and into "admitted as unplaceable".
+See [LIMITATIONS.md](LIMITATIONS.md).
 
 ### Stage 5 — Netting: prove batch membership
 
