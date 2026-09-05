@@ -134,7 +134,6 @@ their timestamp — a guess that leaves both payouts balancing and goes unnotice
 for weeks. Attribution now refuses unless exactly one batch's observed members
 bracket the timestamp, which refuses 18 of 250 adjustments on `merchant_1` and
 moves ₹19,024.78 out of "silently netted" and into "admitted as unplaceable".
-See [LIMITATIONS.md](LIMITATIONS.md).
 
 ### Stage 5 — Netting: prove batch membership
 
@@ -454,7 +453,7 @@ it is sent only as `x-api-key` to this API and never reaches the ledger or a log
 
 ## 11. Known limits
 
-Stated in full in [LIMITATIONS.md](LIMITATIONS.md). The ones that matter most:
+The ones that matter most:
 
 - **Synthetic data.** Real bank statements are MT940 or CAMT.053, not tidy CSV,
   and real reports carry 30–80 columns. What is built here is the normalised

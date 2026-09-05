@@ -346,10 +346,11 @@ Stated plainly so nobody discovers it in a demo:
   covered by unit tests calling it directly rather than by the data.
 - **LangGraph** was substituted with a bounded state machine in Java (same node
   contract, same hard step cap). React/Vite/Tailwind were substituted with a
-  no-build UI. See the deviations table in LIMITATIONS.md.
+  no-build UI.
 
 ## What is proven and what is not
 
-See [LIMITATIONS.md](LIMITATIONS.md). Short version: this demonstrates
-algorithmic capability and calibration under a self-authored noise model. It is
-not evidence of real-world accuracy.
+This demonstrates algorithmic capability and calibration under a self-authored
+noise model. It is **not** evidence of real-world accuracy: the data is
+synthetic, the corruption patterns in bank narration are ours, and a real
+deployment would meet formats and failure modes this has never seen.
